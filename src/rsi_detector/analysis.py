@@ -70,7 +70,7 @@ def is_valid_magic_line(x_1, x_2, y_1, y_2, df_rsi, limit=30) -> Line:
         if y > a * x + b + THRESHOLD_CROSS:
             if (
                 position_from_end > NB_LAST_POINT_AUTHORIZED
-                or y < df_rsi.iloc[i]["ema5"]
+                or df_rsi.loc[x]["Close"] < df_rsi.loc[x]["ema5"]
             ):
                 return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
             else:
@@ -149,22 +149,27 @@ def compute_and_validate_2_combinations(df_rsi, limit=100):
     else:
         return None
 
+
 def get_sum_line_distances(df, a, b):
     y_line = a * df.index + b
-    is_below = df['RSI'] <= y_line
-    df['distances'] = np.where(is_below, abs(a * df.index - df['RSI'] + b) / np.sqrt(a**2 + 1), 0)
+    is_below = df["RSI"] <= y_line
+    df["distances"] = np.where(
+        is_below, abs(a * df.index - df["RSI"] + b) / np.sqrt(a**2 + 1), 0
+    )
 
-    df['Volatility'] = df['distances'].rolling(window=10).sum()
-    df['Volatility_tendency'] = df['Volatility'].diff()
+    df["Volatility"] = df["distances"].rolling(window=10).sum()
+    df["Volatility_tendency"] = df["Volatility"].diff()
 
     return df
 
-def get_best_valid_line(best_lines, asset, df, limit):
-    df_rsi = compute_rsi(df)
+
+def get_best_valid_line(best_lines, asset, df_rsi, limit):
     best_line = compute_and_validate_2_combinations(df_rsi.iloc[-limit:])
 
     if best_line:
-        get_sum_line_distances(df, best_line.a, best_line.b)
-        diminish_tendency =  (df_rsi['Volatility_tendency'][-10:] < 0).mean() > VOLATILITY_COMPRESSION_THRESHOLD
+        get_sum_line_distances(df_rsi, best_line.a, best_line.b)
+        diminish_tendency = (
+            df_rsi["Volatility_tendency"][-10:] < 0
+        ).mean() > VOLATILITY_COMPRESSION_THRESHOLD
         if best_line.score > 1 and diminish_tendency:
             best_lines.append((best_line, asset, df_rsi))

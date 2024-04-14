@@ -1,4 +1,4 @@
-from src.rsi_detector.analysis import HISTORY_LIMIT, get_best_valid_line
+from src.rsi_detector.analysis import HISTORY_LIMIT, compute_rsi, get_best_valid_line
 from src.rsi_detector.data_collect import (
     get_pair_df,
     get_spot_pairs,
@@ -17,7 +17,8 @@ def screen_best_asset(limit=100):
 
     for pair in pairs[:CRYPTO_NUMBER]:
         df = get_pair_df(pair=pair, limit=HISTORY_LIMIT, frequency="1w")
-        get_best_valid_line(best_lines, pair, df, limit)
+        df_rsi = compute_rsi(df)
+        get_best_valid_line(best_lines, pair, df_rsi, limit)
 
     best_lines.sort(key=lambda x: x[0].score, reverse=True)
     display_crypto(best_lines, limit)
@@ -29,7 +30,8 @@ def screen_best_stocks(limit=100):
 
     for stock in stocks[:STOCK_NUMBER]:
         df = get_stock_data(stock)
-        get_best_valid_line(best_lines, stock, df, limit)
+        df_rsi = compute_rsi(df)
+        get_best_valid_line(best_lines, stock, df_rsi, limit)
 
     best_lines.sort(key=lambda x: x[0].score, reverse=True)
     display_stock(limit, best_lines)
