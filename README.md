@@ -1,4 +1,4 @@
-# rsi_detector
+# Market Technical Analysis Lab 
 
 
 # Unit test reproducibility
