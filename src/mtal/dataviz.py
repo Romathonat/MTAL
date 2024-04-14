@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.rsi_detector.analysis import compute_line
+from src.mtal.analysis import compute_line
 
 
 def plot_rsi(df_rsi, limit=30):

@@ -1,11 +1,11 @@
-from src.rsi_detector.analysis import HISTORY_LIMIT, compute_rsi, get_best_valid_line
-from src.rsi_detector.data_collect import (
+from src.mtal.analysis import HISTORY_LIMIT, compute_rsi, get_best_valid_line
+from src.mtal.data_collect import (
     get_pair_df,
     get_spot_pairs,
     get_stock_data,
     get_ticker_names,
 )
-from src.rsi_detector.dataviz import display_crypto, display_stock
+from src.mtal.dataviz import display_crypto, display_stock
 
 CRYPTO_NUMBER = 500
 STOCK_NUMBER = 600

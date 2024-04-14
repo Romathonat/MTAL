@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.rsi_detector.analysis import get_best_valid_line
+from src.mtal.analysis import get_best_valid_line
 
 
 def test_no_data():
