@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from src.mtal.utils import get_ema_names
+
 THRESHOLD_CROSS = 1
 NB_LAST_POINT_AUTHORIZED = 3
 NB_PREVIOUS_POINT_NO_CROSS = 0
@@ -49,7 +51,7 @@ def compute_rsi(df):
 
 def compute_ema(df, span=9):
     ema = df["Close"].ewm(span=span, adjust=False).mean()
-    df[f"EMA_{span}"] = ema
+    df[get_ema_names(span)] = ema
     return df
 
 

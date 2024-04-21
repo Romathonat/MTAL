@@ -92,7 +92,4 @@ def test_compute_ema():
         ],
         index=df.index,
     )
-    print(expected_ema)
-    print(df_ema[f"EMA_{span}"])
-    # assert df_ema[f"EMA_{span}"].equals(expected_ema)
     assert_series_equal(df_ema[f"EMA_{span}"], expected_ema, check_names=False)
