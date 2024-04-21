@@ -6,24 +6,28 @@ from pandas import DataFrame
 
 @dataclass
 class BacktestResults:
-    total_return: float
     pnl: float
+    pnl_percentage: float
     max_drawdown: float
     win_rate: float
     average_return: float
+    trade_number: float
 
 
 class AbstractBacktest(ABC):
     def __init__(self, data, cash=1000) -> None:
         self.data = data
         self.price_entered = 0
+        self.init_cash = cash
         self.cash = cash
         self.current_bet = 0
         self.wins = 0
         self.losses = 0
         self.cash_history = [cash]
         self.return_history = []
-
+        self.entry_dates = []
+        self.exit_dates = []
+        
     def run(self):
         for i in range(1, len(self.data)):
             current_df = self.data.iloc[:i]
@@ -35,15 +39,15 @@ class AbstractBacktest(ABC):
         if self.cash == 0:
             self._exiting_update(current_df)
 
-        pnl = sum([1 + variation for variation in self.return_history])
-        total_return = pnl * self.cash
+        pnl_percentage = (self.cash - self.init_cash) / self.init_cash
 
         results = BacktestResults(
-            total_return=total_return,
-            pnl=pnl,
+            pnl=self.cash,
+            pnl_percentage=pnl_percentage,
             max_drawdown=min(self.return_history),
             win_rate=self.wins / (self.wins + self.losses),
             average_return=sum(self.return_history) / len(self.return_history),
+            trade_number=len(self.return_history),
         )
         return results
 
