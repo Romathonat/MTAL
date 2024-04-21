@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+from pandas.testing import assert_series_equal
 
-from src.mtal.analysis import compute_rsi
+from src.mtal.analysis import compute_ema, compute_rsi
 
 
 def test_compute_rsi_empty():
@@ -52,3 +53,46 @@ def test_compute_rsi():
         ]
     )
     assert df_rsi["RSI"].all() == expected_serie.all()
+
+
+def test_compute_ema():
+    data = {
+        "Date": [
+            "2024-02-05",
+            "2024-02-12",
+            "2024-02-19",
+            "2024-02-26",
+            "2024-03-04",
+            "2024-03-11",
+            "2024-03-18",
+            "2024-03-25",
+            "2024-04-02",
+            "2024-04-08",
+        ],
+        "Close": [67129, 64977, 65672, 63487, 63835, 61301, 63487, 63835, 64975, 65007],
+    }
+
+    df = pd.DataFrame(data=data)
+
+    span = 3
+    df_ema = compute_ema(df, span=span)
+
+    expected_ema = pd.Series(
+        [
+            67129.0,
+            66053.0,
+            65862.5,
+            64674.75,
+            64254.875,
+            62777.9375,
+            63132.46875,
+            63483.734375,
+            64229.3671875,
+            64618.18359375,
+        ],
+        index=df.index,
+    )
+    print(expected_ema)
+    print(df_ema[f"EMA_{span}"])
+    # assert df_ema[f"EMA_{span}"].equals(expected_ema)
+    assert_series_equal(df_ema[f"EMA_{span}"], expected_ema, check_names=False)

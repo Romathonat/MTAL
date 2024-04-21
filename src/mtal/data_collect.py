@@ -63,7 +63,7 @@ def get_pair_df(pair="BTCUSDT", limit=400, frequency="1w"):
 
 
 def get_ticker_names():
-    df = pd.read_csv("stock_list.csv", sep=";")
+    df = pd.read_csv("./data/stock_list.csv", sep=";")
     df["ticker_eodhd"] = df["Symbol"] + "." + df["Market"].map(MARKET_SHORTNAME)
     return df["ticker_eodhd"]
 

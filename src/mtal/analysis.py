@@ -47,6 +47,12 @@ def compute_rsi(df):
     return df
 
 
+def compute_ema(df, span=9):
+    ema = df["Close"].ewm(span=span, adjust=False).mean()
+    df[f"EMA_{span}"] = ema
+    return df
+
+
 def compute_line(x_1, x_2, y_1, y_2):
     a = (y_2 - y_1) / (x_2 - x_1)
     b = y_1 - a * x_1
