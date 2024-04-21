@@ -32,6 +32,9 @@ class AbstractBacktest(ABC):
             elif self.current_bet != 0 and self.is_exit(current_df):
                 self._exiting_update(current_df)
 
+        if self.cash == 0:
+            self._exiting_update(current_df)
+
         pnl = sum([1 + variation for variation in self.return_history])
         total_return = pnl * self.cash
 
@@ -45,6 +48,13 @@ class AbstractBacktest(ABC):
         return results
 
     def _exiting_update(self, current_df):
+        variation = self._update_cash(current_df)
+        self.current_bet = 0
+        self.price_entered = 0
+        self.cash_history.append(self.cash)
+        self.return_history.append(variation)
+
+    def _update_cash(self, current_df):
         variation = (
             current_df.iloc[-1]["Close"] - self.price_entered
         ) / self.price_entered
@@ -54,10 +64,7 @@ class AbstractBacktest(ABC):
         else:
             self.losses += 1
         self.cash = (1 + variation) * self.current_bet
-        self.current_bet = 0
-        self.price_entered = 0
-        self.cash_history.append(self.cash)
-        self.return_history.append(variation)
+        return variation
 
     def _entering_update(self, current_df):
         self.price_entered = current_df.iloc[-1]["Close"]
