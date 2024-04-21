@@ -12,6 +12,8 @@ class BacktestResults:
     win_rate: float
     average_return: float
     trade_number: float
+    entry_dates: list
+    exit_dates: list
 
 
 class AbstractBacktest(ABC):
@@ -27,7 +29,7 @@ class AbstractBacktest(ABC):
         self.return_history = []
         self.entry_dates = []
         self.exit_dates = []
-        
+
     def run(self):
         for i in range(1, len(self.data)):
             current_df = self.data.iloc[:i]
@@ -48,11 +50,14 @@ class AbstractBacktest(ABC):
             win_rate=self.wins / (self.wins + self.losses),
             average_return=sum(self.return_history) / len(self.return_history),
             trade_number=len(self.return_history),
+            entry_dates=self.entry_dates,
+            exit_dates=self.exit_dates,
         )
         return results
 
     def _exiting_update(self, current_df):
         variation = self._update_cash(current_df)
+        self.exit_dates.append(current_df.iloc[-1]["Close Time"])
         self.current_bet = 0
         self.price_entered = 0
         self.cash_history.append(self.cash)
@@ -71,6 +76,7 @@ class AbstractBacktest(ABC):
         return variation
 
     def _entering_update(self, current_df):
+        self.entry_dates.append(current_df.iloc[-1]["Close Time"])
         self.price_entered = current_df.iloc[-1]["Close"]
         self.current_bet, self.cash = self.cash, self.current_bet
 
