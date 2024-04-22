@@ -14,32 +14,35 @@ class EMACrossBacktester(AbstractBacktest):
         self.long_ema = long_ema
 
     def is_enter(self, df: DataFrame):
-        if len(df) < 2:
+        """
+        We enter at the current open if the previous ema is a cross
+        """
+        if len(df) < 3:
             return False
 
         just_crossed = (
-            df.iloc[-1][get_ema_names(self.short_ema)]
-            > df.iloc[-1][get_ema_names(self.long_ema)]
+            df.iloc[-2][get_ema_names(self.short_ema)]
+            > df.iloc[-2][get_ema_names(self.long_ema)]
         )
         uncrossed_before = (
-            df.iloc[-2][get_ema_names(self.short_ema)]
-            <= df.iloc[-2][get_ema_names(self.long_ema)]
+            df.iloc[-3][get_ema_names(self.short_ema)]
+            <= df.iloc[-3][get_ema_names(self.long_ema)]
         )
         if just_crossed and uncrossed_before:
             return True
         return False
 
     def is_exit(self, df: DataFrame):
-        if len(df) < 1:
+        if len(df) < 3:
             return False
 
         just_crossed = (
-            df.iloc[-1][get_ema_names(self.short_ema)]
-            < df.iloc[-1][get_ema_names(self.long_ema)]
+            df.iloc[-2][get_ema_names(self.short_ema)]
+            < df.iloc[-2][get_ema_names(self.long_ema)]
         )
         uncrossed_before = (
-            df.iloc[-2][get_ema_names(self.short_ema)]
-            >= df.iloc[-2][get_ema_names(self.long_ema)]
+            df.iloc[-3][get_ema_names(self.short_ema)]
+            >= df.iloc[-3][get_ema_names(self.long_ema)]
         )
         if just_crossed and uncrossed_before:
             return True

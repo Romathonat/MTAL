@@ -2,12 +2,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Pytest - good setup",
+            "name": "Pytest - ema_cross",
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
             "args": [
-                "tests/test_get_best_valid_line.py::test_no_ema5_reclaim"
+                "tests/test_backtesting.py::test_ema_cross_backtester_no_exit"
             ],
             "console": "integratedTerminal",
             "justMyCode": false

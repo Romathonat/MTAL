@@ -46,7 +46,10 @@ def get_pair_df(pair="BTCUSDT", limit=400, frequency="1w"):
         "Ignore",
     ]
     try:
-        df = pd.DataFrame(data=client.klines(pair, "1w", limit=limit), columns=columns)
+        df = pd.DataFrame(
+            data=client.klines(pair, interval=frequency, limit=limit),
+            columns=columns,
+        )
     except Exception:
         return pd.DataFrame(columns=columns)
 
