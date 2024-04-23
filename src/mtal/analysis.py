@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from src.mtal.utils import get_ema_names
+from src.mtal.utils import get_ma_names
 
 THRESHOLD_CROSS = 1
 NB_LAST_POINT_AUTHORIZED = 3
@@ -51,7 +51,17 @@ def compute_rsi(df):
 
 def compute_ema(df, span=9):
     ema = df["Close"].ewm(span=span, adjust=False).mean()
-    df[get_ema_names(span)] = ema
+    df[get_ma_names(span)] = ema
+    return df
+
+
+def compute_vwma(df, span=9):
+    volume_prices = df["Close"] * df["Volume"]
+    sum_volume_prices = volume_prices.rolling(window=span).sum()
+    sum_volumes = df["Volume"].rolling(window=span).sum()
+    vwma = sum_volume_prices / sum_volumes
+
+    df[get_ma_names(span, "vwma")] = vwma
     return df
 
 

@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from src.mtal.backtesting.common import BacktestResults
-from src.mtal.backtesting.ema_cross_backtest import EMACrossBacktester
+from src.mtal.backtesting.ma_cross_backtest import MACrossBacktester
 from src.mtal.utils import generate_pinescript
 
 
@@ -44,9 +44,7 @@ def sample_data_no_exit():
 def test_ema_cross_backtester(sample_data: pd.DataFrame):
     short_ema = 3
     long_ema = 20
-    tester = EMACrossBacktester(
-        short_ema=short_ema, long_ema=long_ema, data=sample_data
-    )
+    tester = MACrossBacktester(short_ma=short_ema, long_ma=long_ema, data=sample_data)
     results = tester.run()
 
     assert isinstance(results, BacktestResults)
@@ -60,8 +58,8 @@ def test_ema_cross_backtester(sample_data: pd.DataFrame):
 def test_ema_cross_backtester_no_exit_except_ending(sample_data_no_exit: pd.DataFrame):
     short_ema = 3
     long_ema = 20
-    tester = EMACrossBacktester(
-        short_ema=short_ema, long_ema=long_ema, data=sample_data_no_exit
+    tester = MACrossBacktester(
+        short_ma=short_ema, long_ma=long_ema, data=sample_data_no_exit
     )
     results = tester.run()
 

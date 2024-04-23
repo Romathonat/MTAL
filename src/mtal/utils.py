@@ -1,5 +1,5 @@
-def get_ema_names(span):
-    return f"EMA_{span}"
+def get_ma_names(span, prefix="ema"):
+    return f"{prefix}_{span}"
 
 
 def generate_pinescript(entry_dates, exit_dates):
@@ -32,8 +32,3 @@ for i = 0 to array.size(exitDates) - 1
 {exit_dates_str}
 {str_after}
            """
-
-
-entry_dates = [1513555199999, 1517788799999]
-exit_dates = [1519603199999, 1520812799999]
-print(generate_pinescript(entry_dates, exit_dates))

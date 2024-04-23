@@ -3,6 +3,7 @@ import pandas as pd
 from pandas.testing import assert_series_equal
 
 from src.mtal.analysis import compute_ema, compute_rsi
+from src.mtal.utils import get_ma_names
 
 
 def test_compute_rsi_empty():
@@ -92,4 +93,4 @@ def test_compute_ema():
         ],
         index=df.index,
     )
-    assert_series_equal(df_ema[f"EMA_{span}"], expected_ema, check_names=False)
+    assert_series_equal(df_ema[get_ma_names(span)], expected_ema, check_names=False)
