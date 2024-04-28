@@ -16,23 +16,24 @@ class BacktestResults:
     exit_dates: list
     entry_prices: list
     exit_prices: list
+    profit_pct_history: list
+    profit_history: list
 
 
 class AbstractBacktest(ABC):
-    def __init__(self, data, cash=1000) -> None:
+    def __init__(self, data, cash=1000000) -> None:
         self.data = data
-        self.price_entered = 0
-        self.init_cash = cash
         self.cash = cash
         self.current_bet = 0
         self.wins = 0
         self.losses = 0
         self.cash_history = [cash]
-        self.return_history = []
         self.entry_dates = []
         self.exit_dates = []
-        self.entry_price = []
-        self.exit_price = []
+        self.entry_prices = []
+        self.exit_prices = []
+        self.profit_pct_history = []
+        self.profit_history = []
 
     def run(self):
         for i in range(1, len(self.data)):
@@ -45,48 +46,50 @@ class AbstractBacktest(ABC):
         if self.cash == 0:
             self._exiting_update(current_df)
 
-        pnl_percentage = (self.cash - self.init_cash) / self.init_cash
+        pnl_percentage = (self.cash - self.cash_history[0]) / self.cash_history[0]
 
         results = BacktestResults(
-            pnl=self.cash,
+            pnl=self.cash - self.cash_history[0],
             pnl_percentage=pnl_percentage,
-            max_drawdown=min(self.return_history),
+            max_drawdown=min(self.profit_pct_history),
             win_rate=self.wins / (self.wins + self.losses),
-            average_return=sum(self.return_history) / len(self.return_history),
-            trade_number=len(self.return_history),
+            average_return=sum(self.profit_pct_history) / len(self.profit_pct_history),
+            trade_number=len(self.profit_pct_history),
             entry_dates=self.entry_dates,
             exit_dates=self.exit_dates,
-            entry_prices=self.entry_price,
-            exit_prices=self.exit_price,
+            entry_prices=self.entry_prices,
+            exit_prices=self.exit_prices,
+            profit_pct_history=self.profit_pct_history,
+            profit_history=self.profit_history,
         )
         return results
 
-    def _exiting_update(self, current_df):
-        variation = self._update_cash(current_df)
-        self.exit_dates.append(current_df.iloc[-1]["Open Time"])
-        self.current_bet = 0
-        self.price_entered = 0
-        self.cash_history.append(self.cash)
-        self.return_history.append(variation)
-        self.entry_price.append(current_df.iloc[-1]["Open"])
+    def _entering_update(self, current_df):
+        self.entry_dates.append(current_df.iloc[-1]["Open Time"])
+        self.entry_prices.append(current_df.iloc[-1]["Open"])
+        self.current_bet, self.cash = self.cash, self.current_bet
 
-    def _update_cash(self, current_df):
+    def _exiting_update(self, current_df):
+        self.exit_dates.append(current_df.iloc[-1]["Open Time"])
+        self.exit_prices.append(current_df.iloc[-1]["Open"])
+
+        variation = self._get_variation(current_df)
+        self.profit_history.append(variation * self.current_bet)
+        self.current_bet, self.cash = 0, (1 + variation) * self.current_bet
+
+        self.profit_pct_history.append(variation)
+        self.cash_history.append(self.cash)
+
+    def _get_variation(self, current_df):
         variation = (
-            current_df.iloc[-1]["Open"] - self.price_entered
-        ) / self.price_entered
+            current_df.iloc[-1]["Open"] - self.entry_prices[-1]
+        ) / self.entry_prices[-1]
 
         if variation > 0:
             self.wins += 1
         else:
             self.losses += 1
-        self.cash = (1 + variation) * self.current_bet
         return variation
-
-    def _entering_update(self, current_df):
-        self.entry_dates.append(current_df.iloc[-1]["Open Time"])
-        self.price_entered = current_df.iloc[-1]["Open"]
-        self.entry_price.append(current_df.iloc[-1]["Open"])
-        self.current_bet, self.cash = self.cash, self.current_bet
 
     @abstractmethod
     def is_enter(self, df: DataFrame):

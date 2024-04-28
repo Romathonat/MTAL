@@ -15,7 +15,6 @@ class MACrossBacktester(AbstractBacktest):
         else:
             compute_ema(self.data, short_ma)
             compute_ema(self.data, long_ma)
-
         self.short_ema = short_ma
         self.long_ema = long_ma
 
@@ -34,6 +33,7 @@ class MACrossBacktester(AbstractBacktest):
             df.iloc[-3][get_ma_names(self.short_ema, prefix=self.ma_type)]
             <= df.iloc[-3][get_ma_names(self.long_ema, prefix=self.ma_type)]
         )
+
         if just_crossed and uncrossed_before:
             return True
         return False

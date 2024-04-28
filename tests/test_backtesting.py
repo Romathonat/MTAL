@@ -20,6 +20,7 @@ def sample_data():
     df = pd.DataFrame(data={"date": dates, "Open": prices})
     df["Close"] = df["Open"].shift(-1)
     df["Open Time"] = df["date"]
+    df["Close Time"] = df["date"].shift(-1)
     df.set_index("date", inplace=True)
     return df
 
@@ -36,6 +37,7 @@ def sample_data_no_exit():
     df = pd.DataFrame(data={"date": dates, "Open": prices})
     df["Close"] = df["Open"].shift(-1)
     df["Open Time"] = df["date"]
+    df["Close Time"] = df["date"].shift(-1)
 
     df.set_index("date", inplace=True)
     return df
