@@ -1,5 +1,6 @@
 # Market Technical Analysis Lab 
 
+
 # Unit test reproducibility
 To have a visual representation of what is happening in unit tests, you can copy code and put it into a notebook:
 ```python
