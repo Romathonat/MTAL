@@ -21,7 +21,7 @@ class BacktestResults:
 
 
 class AbstractBacktest(ABC):
-    def __init__(self, data, cash=1000000) -> None:
+    def __init__(self, data, cash=1000) -> None:
         self.data = data
         self.cash = cash
         self.current_bet = 0
@@ -48,12 +48,19 @@ class AbstractBacktest(ABC):
 
         pnl_percentage = (self.cash - self.cash_history[0]) / self.cash_history[0]
 
+        if len(self.profit_history) > 0:
+            max_drawdown = min(self.profit_pct_history)
+            average_return = sum(self.profit_pct_history) / len(self.profit_pct_history)
+        else:
+            max_drawdown = 0
+            average_return = 0
+
         results = BacktestResults(
             pnl=self.cash - self.cash_history[0],
             pnl_percentage=pnl_percentage,
-            max_drawdown=min(self.profit_pct_history),
+            max_drawdown=max_drawdown,
             win_rate=self.wins / (self.wins + self.losses),
-            average_return=sum(self.profit_pct_history) / len(self.profit_pct_history),
+            average_return=average_return,
             trade_number=len(self.profit_pct_history),
             entry_dates=self.entry_dates,
             exit_dates=self.exit_dates,

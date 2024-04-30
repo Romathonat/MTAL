@@ -1,6 +1,5 @@
 # Market Technical Analysis Lab 
 
-
 # Unit test reproducibility
 To have a visual representation of what is happening in unit tests, you can copy code and put it into a notebook:
 ```python
@@ -39,6 +38,7 @@ data = {
         ],
         "Volume_MA": [313.15, 322.90, 332.15, 325.55, 272.85, 292, 300, 300, 300, 300],
     }
+
 
 # we need a longer dataset for rolling windows
 for key, item in data.items():
