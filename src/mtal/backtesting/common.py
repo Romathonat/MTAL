@@ -21,7 +21,7 @@ class BacktestResults:
 
 
 class AbstractBacktest(ABC):
-    def __init__(self, data, cash=1000000) -> None:
+    def __init__(self, data, cash=1000) -> None:
         self.data = data
         self.cash = cash
         self.current_bet = 0
@@ -65,25 +65,25 @@ class AbstractBacktest(ABC):
         return results
 
     def _entering_update(self, current_df):
-        self.entry_dates.append(current_df.iloc[-1]["Open Time"])
-        self.entry_prices.append(current_df.iloc[-1]["Open"])
+        self.entry_dates.append(current_df.iloc[-1]["Close Time"])
+        self.entry_prices.append(current_df.iloc[-1]["Close"])
         self.current_bet, self.cash = self.cash, self.current_bet
 
     def _exiting_update(self, current_df):
-        self.exit_dates.append(current_df.iloc[-1]["Open Time"])
-        self.exit_prices.append(current_df.iloc[-1]["Open"])
+        self.exit_dates.append(current_df.iloc[-1]["Close Time"])
+        self.exit_prices.append(current_df.iloc[-1]["Close"])
 
-        variation = self._get_variation(current_df)
+        variation = self._get_variation()
         self.profit_history.append(variation * self.current_bet)
         self.current_bet, self.cash = 0, (1 + variation) * self.current_bet
 
         self.profit_pct_history.append(variation)
         self.cash_history.append(self.cash)
 
-    def _get_variation(self, current_df):
-        variation = (
-            current_df.iloc[-1]["Open"] - self.entry_prices[-1]
-        ) / self.entry_prices[-1]
+    def _get_variation(self):
+        variation = (self.exit_prices[-1] - self.entry_prices[-1]) / self.entry_prices[
+            -1
+        ]
 
         if variation > 0:
             self.wins += 1
