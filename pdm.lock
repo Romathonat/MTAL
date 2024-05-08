@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:1de02f7297a77dc710a8e5cf67966899b57c4b616089f541370732a1c0b2bc56"
+content_hash = "sha256:0b5736a646f77d67f7a6f5f9156c11095d41b3f3d7436595d70fe12d7123685e"
 
 [[package]]
 name = "appnope"
@@ -559,6 +559,18 @@ files = [
 ]
 
 [[package]]
+name = "pandas-ta"
+version = "0.3.14b0"
+summary = "An easy to use Python 3 Pandas Extension with 130+ Technical Analysis Indicators. Can be called from a Pandas DataFrame or standalone like TA-Lib. Correlation tested with TA-Lib."
+groups = ["default"]
+dependencies = [
+    "pandas",
+]
+files = [
+    {file = "pandas_ta-0.3.14b.tar.gz", hash = "sha256:0fa35aec831d2815ea30b871688a8d20a76b288a7be2d26cc00c35cd8c09a993"},
+]
+
+[[package]]
 name = "parso"
 version = "0.8.3"
 requires_python = ">=3.6"
@@ -910,6 +922,19 @@ dependencies = [
 files = [
     {file = "stack_data-0.6.3-py3-none-any.whl", hash = "sha256:d5558e0c25a4cb0853cddad3d77da9891a08cb85dd9f9f91b9f8cd66e511e695"},
     {file = "stack_data-0.6.3.tar.gz", hash = "sha256:836a778de4fec4dcd1dcd89ed8abff8a221f58308462e1c4aa2a3cf30148f0b9"},
+]
+
+[[package]]
+name = "ta"
+version = "0.11.0"
+summary = "Technical Analysis Library in Python"
+groups = ["default"]
+dependencies = [
+    "numpy",
+    "pandas",
+]
+files = [
+    {file = "ta-0.11.0.tar.gz", hash = "sha256:de86af43418420bd6b088a2ea9b95483071bf453c522a8441bc2f12bcf8493fd"},
 ]
 
 [[package]]

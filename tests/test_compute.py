@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_series_equal
 
-from src.mtal.analysis import compute_ema, compute_rsi
+from src.mtal.analysis import compute_ema, compute_hull_moving_average, compute_rsi
 from src.mtal.utils import get_ma_names
 
 
@@ -94,3 +94,35 @@ def test_compute_ema():
         index=df.index,
     )
     assert_series_equal(df_ema[get_ma_names(span)], expected_ema, check_names=False)
+
+
+def test_compute_hull_moving_average():
+    data = {
+        "Date": [
+            "2024-02-05",
+            "2024-02-12",
+            "2024-02-19",
+            "2024-02-26",
+            "2024-03-04",
+            "2024-03-11",
+            "2024-03-18",
+            "2024-03-25",
+            "2024-04-02",
+            "2024-04-08",
+        ],
+        "Close": [48309, 52115, 51734, 63249, 69049, 68288, 67242, 71333, 69240, 65910],
+    }
+
+    df = pd.DataFrame(data=data)
+
+    span = 2
+    df_hma = compute_hull_moving_average(df, span=span)
+
+    expected_hma = pd.Series(
+        [0, 53383, 51607, 67087, 70982, 68034, 66893, 72696, 68542, 64800],
+        index=df.index,
+    )
+
+    assert_series_equal(
+        df_hma[get_ma_names(span, prefix="hma")], expected_hma, check_names=False
+    )

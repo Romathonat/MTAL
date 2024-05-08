@@ -54,7 +54,6 @@ def test_ema_cross_backtester(sample_data: pd.DataFrame):
     assert results.max_drawdown is not None
     assert results.win_rate is not None
     assert results.average_return is not None
-    # TODO: comme le suivant mais rajouter l'exit price et date
 
 
 def test_ema_cross_backtester_no_exit_except_ending(sample_data_no_exit: pd.DataFrame):

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from ta.trend import WMAIndicator
 
 from src.mtal.utils import get_ma_names
 
@@ -62,6 +63,22 @@ def compute_vwma(df, span=9):
     vwma = sum_volume_prices / sum_volumes
 
     df[get_ma_names(span, "vwma")] = vwma
+    return df
+
+
+def weighted_moving_average(close, span=2):
+    return WMAIndicator(close=close, window=span).wma()
+
+
+def compute_hull_moving_average(df, span=9):
+    wma_half = weighted_moving_average(df["Close"], span // 2)
+    wma_full = weighted_moving_average(df["Close"], span)
+    df["data_hull"] = 2 * wma_half - wma_full
+    df[get_ma_names(span, prefix="hma")] = [
+        int(i) if not np.isnan(i) else 0
+        for i in weighted_moving_average(df["data_hull"], int(np.sqrt(span)))
+    ]
+
     return df
 
 

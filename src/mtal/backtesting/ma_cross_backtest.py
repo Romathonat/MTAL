@@ -70,7 +70,7 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
 
     def is_enter(self, df: DataFrame):
         """
-        We enter at the current open if the previous ema is a cross
+        We enter at the current open there is a cross and the price is above the long ma
         """
         if len(df) < 3:
             return False
@@ -93,6 +93,9 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
         return False
 
     def is_exit(self, df: DataFrame):
+        """
+        We get out if price below long ma
+        """
         if len(df) < 3:
             return False
 
