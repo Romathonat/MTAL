@@ -70,7 +70,7 @@ def weighted_moving_average(close, span=2):
     return WMAIndicator(close=close, window=span).wma()
 
 
-def compute_hull_moving_average(df, span=9):
+def compute_hma(df, span=9):
     wma_half = weighted_moving_average(df["Close"], span // 2)
     wma_full = weighted_moving_average(df["Close"], span)
     df["data_hull"] = 2 * wma_half - wma_full

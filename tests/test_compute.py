@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_series_equal
 
-from src.mtal.analysis import compute_ema, compute_hull_moving_average, compute_rsi
+from src.mtal.analysis import compute_ema, compute_hma, compute_rsi
 from src.mtal.utils import get_ma_names
 
 
@@ -116,7 +116,7 @@ def test_compute_hull_moving_average():
     df = pd.DataFrame(data=data)
 
     span = 2
-    df_hma = compute_hull_moving_average(df, span=span)
+    df_hma = compute_hma(df, span=span)
 
     expected_hma = pd.Series(
         [0, 53383, 51607, 67087, 70982, 68034, 66893, 72696, 68542, 64800],

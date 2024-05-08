@@ -1,6 +1,6 @@
 from pandas import DataFrame
 
-from src.mtal.analysis import compute_ema, compute_vwma
+from src.mtal.analysis import compute_ema, compute_hma, compute_vwma
 from src.mtal.backtesting.common import AbstractBacktest
 from src.mtal.utils import get_ma_names
 
@@ -12,6 +12,9 @@ class MACrossBacktester(AbstractBacktest):
         if ma_type == "vwma":
             compute_vwma(self.data, short_ma)
             compute_vwma(self.data, long_ma)
+        elif ma_type == "hma":
+            compute_hma(self.data, short_ma)
+            compute_hma(self.data, long_ma)
         else:
             compute_ema(self.data, short_ma)
             compute_ema(self.data, long_ma)
@@ -62,6 +65,9 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
         if ma_type == "vwma":
             compute_vwma(self.data, short_ma)
             compute_vwma(self.data, long_ma)
+        elif ma_type == "hma":
+            compute_hma(self.data, short_ma)
+            compute_hma(self.data, long_ma)
         else:
             compute_ema(self.data, short_ma)
             compute_ema(self.data, long_ma)
