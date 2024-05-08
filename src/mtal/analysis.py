@@ -50,6 +50,40 @@ def compute_rsi(df):
     return df
 
 
+def compute_vzo(df, window=3):
+    if len(df) == 0:
+        return pd.DataFrame()
+
+    # Calcule les pourcentages de changement de prix
+    df["Price Change"] = df["Close"].diff()
+    df["Volume Change"] = df["Volume"].diff()
+
+    conditions = [
+        df["Price Change"] > 0,
+        df["Price Change"] < 0,
+        df["Price Change"] == 0,
+    ]
+
+    choices = [
+        df["Volume"],  # Si le prix monte, le volume total est pris
+        -df["Volume"],  # Si le prix descend, le volume total est négatif
+        0,  # Si le prix ne change pas, le volume est considéré comme 0
+    ]
+
+    # Application des conditions pour déterminer le volume qualifié
+    df["Qualified Volume"] = np.select(conditions, choices)
+
+    # Calcul de la moyenne mobile de 14 périodes du volume qualifié
+    df["VZO Nominator"] = df["Qualified Volume"].rolling(window=window).sum()
+
+    # Calcul de la moyenne mobile de 14 périodes du volume total
+    df["VZO Denominator"] = df["Volume"].rolling(window=window).sum()
+
+    # Calcul du VZO en pourcentage
+    df["VZO"] = (df["VZO Nominator"] / df["VZO Denominator"]) * 100
+    return df
+
+
 def compute_ema(df, span=9):
     ema = df["Close"].ewm(span=span, adjust=False).mean()
     df[get_ma_names(span)] = ema

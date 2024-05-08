@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_series_equal
 
-from src.mtal.analysis import compute_ema, compute_hma, compute_rsi
+from src.mtal.analysis import compute_ema, compute_hma, compute_rsi, compute_vzo
 from src.mtal.utils import get_ma_names
 
 
@@ -53,7 +53,8 @@ def test_compute_rsi():
             65.51280826364248,
         ]
     )
-    assert df_rsi["RSI"].all() == expected_serie.all()
+
+    pd.testing.assert_series_equal(df_rsi["RSI"], expected_serie, check_names=False)
 
 
 def test_compute_ema():
@@ -126,3 +127,43 @@ def test_compute_hull_moving_average():
     assert_series_equal(
         df_hma[get_ma_names(span, prefix="hma")], expected_hma, check_names=False
     )
+
+
+def test_compute_vzo():
+    data = {
+        "Date": [
+            "2024-02-05",
+            "2024-02-12",
+            "2024-02-19",
+            "2024-02-26",
+            "2024-03-04",
+            "2024-03-11",
+            "2024-03-18",
+            "2024-03-25",
+            "2024-04-02",
+            "2024-04-08",
+        ],
+        "Close": [26.0, 26.4, 25.6, 25.8, 26.2, 26.2, 25.2, 26.0, 25.0, 25.0],
+        "Volume": [657, 259, 383, 298, 83, 435, 420, 128, 1054, 175],
+    }
+
+    df = pd.DataFrame(data=data)
+
+    df_vzo = compute_vzo(df)
+
+    expected_serie = pd.Series(
+        [
+            np.nan,
+            np.nan,
+            -9.545804,
+            18.510638,
+            -0.261780,
+            46.691176,
+            -35.927505,
+            -29.704985,
+            -84.019975,
+            -68.238762,
+        ]
+    )
+
+    pd.testing.assert_series_equal(df_vzo["VZO"], expected_serie, check_names=False)
