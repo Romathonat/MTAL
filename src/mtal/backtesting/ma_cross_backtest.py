@@ -59,7 +59,7 @@ class MACrossBacktester(AbstractBacktest):
 
 
 class MACrossPriceAboveBacktester(AbstractBacktest):
-    def __init__(self, data, short_ma, long_ma, ma_type="ema"):
+    def __init__(self, data, short_ma=4, long_ma=6, ma_type="ema"):
         super().__init__(data)
         self.ma_type = ma_type
         if ma_type == "vwma":
