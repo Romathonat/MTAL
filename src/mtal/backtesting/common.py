@@ -40,7 +40,7 @@ class AbstractBacktest(ABC):
             current_df = self.data.iloc[:i]
             if self.is_enter(current_df) and self.current_bet == 0:
                 self._entering_update(current_df)
-            elif self.current_bet != 0 and self.is_exit(current_df):
+            elif self.is_exit(current_df) and self.current_bet != 0:
                 self._exiting_update(current_df)
 
         if self.cash == 0:

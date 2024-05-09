@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from mtal.backtesting.vzo_rsi import VZO_RSI
 from src.mtal.backtesting.common import BacktestResults
 from src.mtal.backtesting.ma_cross_backtest import MACrossBacktester
 from src.mtal.utils import generate_pinescript
@@ -109,3 +110,11 @@ def test_backtester_no_trade(sample_data_no_exit: pd.DataFrame):
     assert results.average_return == 0
     assert results.max_drawdown == 0
     assert results.entry_dates == []
+
+
+def test_trainer_no_ranges(sample_data: pd.DataFrame):
+    ranges = {}
+
+    train_results, test_results = train(sample_data, VZO_RSI, ranges)
+    
+    assert len(train_results) == 0.8 * len(sample_data)
