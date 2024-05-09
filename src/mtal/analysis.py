@@ -29,7 +29,7 @@ class Line:
     b: float = 0.0
 
 
-def compute_rsi(df):
+def compute_rsi(df, window=14):
     if len(df) == 0:
         return pd.DataFrame()
 
@@ -38,9 +38,8 @@ def compute_rsi(df):
     df["Gain"] = df["Change"].mask(df["Change"] < 0, 0)
     df["Loss"] = -df["Change"].mask(df["Change"] > 0, 0)
 
-    window_length = 14
-    df["Avg Gain"] = df["Gain"].ewm(alpha=1 / window_length, adjust=False).mean()
-    df["Avg Loss"] = df["Loss"].ewm(alpha=1 / window_length, adjust=False).mean()
+    df["Avg Gain"] = df["Gain"].ewm(alpha=1 / window, adjust=False).mean()
+    df["Avg Loss"] = df["Loss"].ewm(alpha=1 / window, adjust=False).mean()
 
     df["RS"] = df["Avg Gain"] / df["Avg Loss"]
     df["ema5"] = df["Close"].ewm(span=5, adjust=False).mean()
@@ -50,7 +49,7 @@ def compute_rsi(df):
     return df
 
 
-def compute_vzo(df, window=3):
+def compute_vzo(df, window=14):
     if len(df) == 0:
         return pd.DataFrame()
 

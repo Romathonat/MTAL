@@ -38,7 +38,7 @@ class AbstractBacktest(ABC):
     def run(self):
         for i in range(1, len(self.data)):
             current_df = self.data.iloc[:i]
-            if self.is_enter(current_df):
+            if self.is_enter(current_df) and self.current_bet == 0:
                 self._entering_update(current_df)
             elif self.current_bet != 0 and self.is_exit(current_df):
                 self._exiting_update(current_df)
@@ -48,12 +48,21 @@ class AbstractBacktest(ABC):
 
         pnl_percentage = (self.cash - self.cash_history[0]) / self.cash_history[0]
 
+        max_drawdown = min(self.profit_pct_history) if self.profit_pct_history else 0
+        win_rate = (
+            self.wins / (self.wins + self.losses) if self.profit_pct_history else 0
+        )
+        average_return = (
+            sum(self.profit_pct_history) / len(self.profit_pct_history)
+            if self.profit_pct_history
+            else 0
+        )
         results = BacktestResults(
             pnl=self.cash - self.cash_history[0],
             pnl_percentage=pnl_percentage,
-            max_drawdown=min(self.profit_pct_history),
-            win_rate=self.wins / (self.wins + self.losses),
-            average_return=sum(self.profit_pct_history) / len(self.profit_pct_history),
+            max_drawdown=max_drawdown,
+            win_rate=win_rate,
+            average_return=average_return,
             trade_number=len(self.profit_pct_history),
             entry_dates=self.entry_dates,
             exit_dates=self.exit_dates,

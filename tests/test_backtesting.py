@@ -95,3 +95,17 @@ for i = 0 to array.size(exitDates) - 1
     exit_dates = [1519603199999, 1520812799999]
 
     assert generate_pinescript(entry_dates, exit_dates).strip() == pine_script.strip()
+
+
+def test_backtester_no_trade(sample_data_no_exit: pd.DataFrame):
+    short_ema = 1
+    long_ema = 1
+    tester = MACrossBacktester(
+        short_ma=short_ema, long_ma=long_ema, data=sample_data_no_exit
+    )
+    results = tester.run()
+
+    assert results.win_rate == 0
+    assert results.average_return == 0
+    assert results.max_drawdown == 0
+    assert results.entry_dates == []
