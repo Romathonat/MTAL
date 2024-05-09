@@ -35,7 +35,7 @@ class AbstractBacktest(ABC):
         self.profit_pct_history = []
         self.profit_history = []
 
-    def run(self):
+    def run(self) -> BacktestResults:
         for i in range(1, len(self.data)):
             current_df = self.data.iloc[:i]
             if self.is_enter(current_df) and self.current_bet == 0:
