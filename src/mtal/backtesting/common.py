@@ -53,7 +53,7 @@ class AbstractBacktest(ABC):
                 self._entering_update(current_df)
             elif self.is_exit(current_df) and self.current_bet != 0:
                 self._exiting_update(current_df)
-            variation = self.get_variation_to_date()
+            variation = self.get_variation_to_date(current_df)
             self.value_history.append(self.cash + (1 + variation) * self.current_bet)
 
         if self.cash == 0:
@@ -93,10 +93,10 @@ class AbstractBacktest(ABC):
         )
         return results
 
-    def get_variation_to_date(self):
+    def get_variation_to_date(self, current_df: DataFrame):
         if self.current_bet:
             variation = (
-                self.data.iloc[-1]["Close"] - self.entry_prices[-1]
+                current_df.iloc[-1]["Close"] - self.entry_prices[-1]
             ) / self.entry_prices[-1]
         else:
             variation = 0
