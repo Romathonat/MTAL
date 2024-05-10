@@ -188,4 +188,4 @@ def display_strategy_results(df: pd.DataFrame, results: BacktestResults):
     print(f"Win Rate: {results.win_rate}")
     print(f"Max drawdown: {results.max_drawdown}")
     print(f"Trade number: {results.trade_number}")
-    print(f"Information ratio compared to B&H: {results.information_ratio}")
+    print(f"Excess return compared to B&H: {results.excess_return_vs_buy_and_hold}")
