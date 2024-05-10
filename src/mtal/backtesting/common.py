@@ -7,6 +7,7 @@ from pandas import DataFrame
 @dataclass
 class BacktestResults:
     pnl: float
+    normalized_pnl: float
     pnl_percentage: float
     max_drawdown: float
     win_rate: float
@@ -18,6 +19,7 @@ class BacktestResults:
     exit_prices: list
     profit_pct_history: list
     profit_history: list
+    value_history: list
 
 
 class AbstractBacktest(ABC):
@@ -34,6 +36,7 @@ class AbstractBacktest(ABC):
         self.exit_prices = []
         self.profit_pct_history = []
         self.profit_history = []
+        self.value_history = [cash]
 
         for key, value in params.items():
             setattr(self, key, value)
@@ -50,6 +53,8 @@ class AbstractBacktest(ABC):
                 self._entering_update(current_df)
             elif self.is_exit(current_df) and self.current_bet != 0:
                 self._exiting_update(current_df)
+            variation = self.get_variation_to_date()
+            self.value_history.append(self.cash + (1 + variation) * self.current_bet)
 
         if self.cash == 0:
             self._exiting_update(current_df)
@@ -65,6 +70,11 @@ class AbstractBacktest(ABC):
             if self.profit_pct_history
             else 0
         )
+        pnl = self.cash - self.cash_history[0]
+        normalized_pnl = (
+            pnl / len(self.profit_pct_history) if self.profit_pct_history else 0
+        )
+
         results = BacktestResults(
             pnl=self.cash - self.cash_history[0],
             pnl_percentage=pnl_percentage,
@@ -78,8 +88,19 @@ class AbstractBacktest(ABC):
             exit_prices=self.exit_prices,
             profit_pct_history=self.profit_pct_history,
             profit_history=self.profit_history,
+            normalized_pnl=normalized_pnl,
+            value_history=self.value_history,
         )
         return results
+
+    def get_variation_to_date(self):
+        if self.current_bet:
+            variation = (
+                self.data.iloc[-1]["Close"] - self.entry_prices[-1]
+            ) / self.entry_prices[-1]
+        else:
+            variation = 0
+        return variation
 
     def _entering_update(self, current_df):
         self.entry_dates.append(current_df.iloc[-1]["Close Time"])

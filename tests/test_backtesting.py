@@ -4,7 +4,6 @@ import pytest
 
 from src.mtal.backtesting.common import BacktestResults
 from src.mtal.backtesting.ma_cross_backtest import MACrossBacktester
-from src.mtal.backtesting.vzo_rsi import VZO_RSI
 from src.mtal.utils import generate_pinescript
 
 
@@ -55,6 +54,8 @@ def test_ema_cross_backtester(sample_data: pd.DataFrame):
     assert results.max_drawdown is not None
     assert results.win_rate is not None
     assert results.average_return is not None
+    assert results.normalized_pnl is not None
+    assert len(results.value_history) == len(sample_data)
 
 
 def test_ema_cross_backtester_no_exit_except_ending(sample_data_no_exit: pd.DataFrame):
@@ -110,6 +111,3 @@ def test_backtester_no_trade(sample_data_no_exit: pd.DataFrame):
     assert results.average_return == 0
     assert results.max_drawdown == 0
     assert results.entry_dates == []
-
-
-

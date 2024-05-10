@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from src.mtal.analysis import compute_line
+from src.mtal.backtesting.common import BacktestResults
 
 
 def plot_rsi(df_rsi, limit=30):
@@ -165,3 +167,15 @@ def display_crypto(best_lines, limit):
         print(
             f"Asset: {pair}, Score: {line.score}, URL: https://www.tradingview.com/chart/?symbol=BINANCE:{pair}&interval=1W"
         )
+
+
+def display_portfolio_value(df: pd.DataFrame, results: BacktestResults):
+    plt.figure(figsize=(10, 5))  # Taille de la figure
+    plt.plot(df["Close Time"], results.value_history, label="Valeur du Portefeuille")
+    plt.title("Évolution de la Valeur du Portefeuille")  # Titre du graphique
+    plt.xlabel("Date")  # Étiquette de l'axe des x
+    plt.ylabel("Valeur")  # Étiquette de l'axe des y
+    plt.legend()  # Ajouter une légende
+    plt.grid(True)  # Ajouter une grille pour faciliter la lecture
+    plt.tight_layout()  # Ajuster automatiquement les paramètres de la figure
+    plt.show()  # Afficher le graphique
