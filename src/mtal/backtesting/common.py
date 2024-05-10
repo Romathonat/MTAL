@@ -38,6 +38,11 @@ class AbstractBacktest(ABC):
         for key, value in params.items():
             setattr(self, key, value)
 
+    def extract_named_params(self, params):
+        del params["self"]
+        del params["data"]
+        return params
+
     def run(self) -> BacktestResults:
         for i in range(1, len(self.data)):
             current_df = self.data.iloc[:i]
