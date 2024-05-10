@@ -26,7 +26,6 @@ class MACrossBacktester(AbstractBacktest):
         """
         if len(df) < 3:
             return False
-
         just_crossed = (
             df.iloc[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
             > df.iloc[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
@@ -61,7 +60,6 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
     def __init__(self, data, short_ma=5, long_ma=10, ma_type="ema"):
         params = {"short_ma": short_ma, "long_ma": long_ma, "ma_type": ma_type}
         super().__init__(data, params=params)
-        self.ma_type = ma_type
 
         if ma_type == "vwma":
             compute_vwma(self.data, short_ma)
@@ -79,7 +77,9 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
         """
         if len(df) < 3:
             return False
-
+        print(self.data.columns)
+        print(f"{self.short_ma}, {self.long_ma}")
+        print(" ")
         just_crossed = (
             df.iloc[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
             > df.iloc[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
