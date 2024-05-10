@@ -77,9 +77,6 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
         """
         if len(df) < 3:
             return False
-        print(self.data.columns)
-        print(f"{self.short_ma}, {self.long_ma}")
-        print(" ")
         just_crossed = (
             df.iloc[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
             > df.iloc[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
