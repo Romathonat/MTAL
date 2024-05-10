@@ -20,6 +20,7 @@ class BacktestResults:
     profit_pct_history: list
     profit_history: list
     value_history: list
+    excess_return_vs_buy_and_hold: float
 
 
 class AbstractBacktest(ABC):
@@ -90,6 +91,7 @@ class AbstractBacktest(ABC):
             profit_history=self.profit_history,
             normalized_pnl=normalized_pnl,
             value_history=self.value_history,
+            excess_return_vs_buy_and_hold=self.get_excess_return_vs_buy_and_hold(pnl),
         )
         return results
 
@@ -101,6 +103,10 @@ class AbstractBacktest(ABC):
         else:
             variation = 0
         return variation
+
+    def get_excess_return_vs_buy_and_hold(self, pnl):
+        buy_and_hold_perf = self.data.iloc[-1]["Close"] - self.data.iloc[0]["Close"]
+        return (pnl - buy_and_hold_perf) / self.cash_history[0]
 
     def _entering_update(self, current_df):
         self.entry_dates.append(current_df.iloc[-1]["Close Time"])

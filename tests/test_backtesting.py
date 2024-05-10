@@ -19,8 +19,9 @@ def sample_data():
     )
     df = pd.DataFrame(data={"date": dates, "Open": prices})
     df["Close"] = df["Open"].shift(-1)
-    df["Open Time"] = df["date"]
     df["Close Time"] = df["date"].shift(-1)
+    df["Open Time"] = df["date"]
+    df.drop(df.index[-1], inplace=True)
     df.set_index("date", inplace=True)
     return df
 
@@ -48,7 +49,6 @@ def test_ema_cross_backtester(sample_data: pd.DataFrame):
     long_ema = 20
     tester = MACrossBacktester(short_ma=short_ema, long_ma=long_ema, data=sample_data)
     results = tester.run()
-
     assert isinstance(results, BacktestResults)
     assert results.pnl_percentage > 0
     assert results.max_drawdown is not None
@@ -56,6 +56,7 @@ def test_ema_cross_backtester(sample_data: pd.DataFrame):
     assert results.average_return is not None
     assert results.normalized_pnl is not None
     assert len(results.value_history) == len(sample_data)
+    assert results.excess_return_vs_buy_and_hold == 0.0760609786083107
 
 
 def test_ema_cross_backtester_no_exit_except_ending(sample_data_no_exit: pd.DataFrame):

@@ -179,3 +179,13 @@ def display_portfolio_value(df: pd.DataFrame, results: BacktestResults):
     plt.grid(True)  # Ajouter une grille pour faciliter la lecture
     plt.tight_layout()  # Ajuster automatiquement les paramètres de la figure
     plt.show()  # Afficher le graphique
+
+
+def display_strategy_results(df: pd.DataFrame, results: BacktestResults):
+    display_portfolio_value(df, results)
+    print(f"pnl: {results.pnl}")
+    print(f"Normalized pnl: {results.normalized_pnl}")
+    print(f"Win Rate: {results.win_rate}")
+    print(f"Max drawdown: {results.max_drawdown}")
+    print(f"Trade number: {results.trade_number}")
+    print(f"Information ratio compared to B&H: {results.information_ratio}")
