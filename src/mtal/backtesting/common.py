@@ -21,7 +21,7 @@ class BacktestResults:
 
 
 class AbstractBacktest(ABC):
-    def __init__(self, data, cash=1000) -> None:
+    def __init__(self, data, params={}, cash=1000) -> None:
         self.data = data
         self.cash = cash
         self.current_bet = 0
@@ -34,6 +34,9 @@ class AbstractBacktest(ABC):
         self.exit_prices = []
         self.profit_pct_history = []
         self.profit_history = []
+
+        for key, value in params.items():
+            setattr(self, key, value)
 
     def run(self) -> BacktestResults:
         for i in range(1, len(self.data)):
