@@ -67,9 +67,6 @@ class AbstractBacktest(ABC):
                 self.b_n_h_history[-1] * (1 + variation_yesterday)
             )
 
-        print(len(self.value_history))
-        print(len(self.b_n_h_history))
-
         if self.cash == 0:
             self._exiting_update(current_df)
 
@@ -119,7 +116,11 @@ class AbstractBacktest(ABC):
         return variation
 
     def get_excess_return_vs_buy_and_hold(self, pnl):
-        buy_and_hold_perf = self.data.iloc[-1]["Close"] - self.data.iloc[0]["Close"]
+        buy_and_hold_perf = (
+            (self.data.iloc[-1]["Close"] - self.data.iloc[0]["Close"])
+            / self.data.iloc[-1]["Close"]
+            * self.cash_history[0]
+        )
         return (pnl - buy_and_hold_perf) / self.cash_history[0]
 
     def _entering_update(self, current_df):
