@@ -172,6 +172,9 @@ def display_crypto(best_lines, limit):
 def display_portfolio_value(df: pd.DataFrame, results: BacktestResults):
     plt.figure(figsize=(10, 5))  # Taille de la figure
     plt.plot(df["Close Time"], results.value_history, label="Valeur du Portefeuille")
+    plt.plot(
+        df["Close Time"], df["Close"], label="Benchmark Buy & Hold", color="orange"
+    )
     plt.title("Évolution de la Valeur du Portefeuille")  # Titre du graphique
     plt.xlabel("Date")  # Étiquette de l'axe des x
     plt.ylabel("Valeur")  # Étiquette de l'axe des y

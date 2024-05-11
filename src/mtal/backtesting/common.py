@@ -20,6 +20,7 @@ class BacktestResults:
     profit_pct_history: list
     profit_history: list
     value_history: list
+    b_n_h_history: list
     excess_return_vs_buy_and_hold: float
 
 
@@ -38,6 +39,7 @@ class AbstractBacktest(ABC):
         self.profit_pct_history = []
         self.profit_history = []
         self.value_history = [cash]
+        self.b_n_h_history = [cash]
 
         for key, value in params.items():
             setattr(self, key, value)
@@ -48,15 +50,23 @@ class AbstractBacktest(ABC):
         return params
 
     def run(self) -> BacktestResults:
-        for i in range(1, len(self.data)):
+        for i in range(2, len(self.data)):
             current_df = self.data.iloc[:i]
             if self.is_enter(current_df) and self.current_bet == 0:
                 self._entering_update(current_df)
             elif self.is_exit(current_df) and self.current_bet != 0:
                 self._exiting_update(current_df)
-            variation = self.get_variation_to_date(current_df)
-            self.value_history.append(self.cash + (1 + variation) * self.current_bet)
-
+            variation_entry = self.get_variation_to_date(current_df)
+            # print(current_df)
+            variation_yesterday = (
+                current_df.iloc[-1]["Close"] - current_df.iloc[-2]["Close"]
+            ) / current_df.iloc[-2]["Close"]
+            self.value_history.append(
+                self.cash + (1 + variation_entry) * self.current_bet
+            )
+            self.b_n_h_history.append(
+                self.b_n_h_history[-1] * (1 + variation_yesterday)
+            )
         if self.cash == 0:
             self._exiting_update(current_df)
 
@@ -91,6 +101,7 @@ class AbstractBacktest(ABC):
             profit_history=self.profit_history,
             normalized_pnl=normalized_pnl,
             value_history=self.value_history,
+            b_n_h_history=self.b_n_h_history,
             excess_return_vs_buy_and_hold=self.get_excess_return_vs_buy_and_hold(pnl),
         )
         return results
