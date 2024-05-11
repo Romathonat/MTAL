@@ -38,8 +38,8 @@ class AbstractBacktest(ABC):
         self.exit_prices = []
         self.profit_pct_history = []
         self.profit_history = []
-        self.value_history = [cash]
-        self.b_n_h_history = [cash]
+        self.value_history = [cash, cash]
+        self.b_n_h_history = [cash, cash]
 
         for key, value in params.items():
             setattr(self, key, value)
@@ -57,7 +57,6 @@ class AbstractBacktest(ABC):
             elif self.is_exit(current_df) and self.current_bet != 0:
                 self._exiting_update(current_df)
             variation_entry = self.get_variation_to_date(current_df)
-            # print(current_df)
             variation_yesterday = (
                 current_df.iloc[-1]["Close"] - current_df.iloc[-2]["Close"]
             ) / current_df.iloc[-2]["Close"]
@@ -67,6 +66,10 @@ class AbstractBacktest(ABC):
             self.b_n_h_history.append(
                 self.b_n_h_history[-1] * (1 + variation_yesterday)
             )
+
+        print(len(self.value_history))
+        print(len(self.b_n_h_history))
+
         if self.cash == 0:
             self._exiting_update(current_df)
 

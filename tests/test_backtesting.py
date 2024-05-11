@@ -55,8 +55,8 @@ def test_ema_cross_backtester(sample_data: pd.DataFrame):
     assert results.win_rate is not None
     assert results.average_return is not None
     assert results.normalized_pnl is not None
-    assert len(results.value_history) == len(sample_data) - 1
-    assert len(results.b_n_h_history) == len(sample_data) - 1
+    assert len(results.value_history) == len(sample_data)
+    assert len(results.b_n_h_history) == len(sample_data)
     assert results.excess_return_vs_buy_and_hold == 0.0760609786083107
 
 
