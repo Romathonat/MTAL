@@ -190,9 +190,7 @@ def display_portfolio_value(df: pd.DataFrame, results: BacktestResults):
 def display_strategy_results(df: pd.DataFrame, results: BacktestResults):
     display_portfolio_value(df, results)
     print(f"pnl: {results.pnl}")
-    print(f"Normalized pnl: {results.normalized_pnl}")
     print(f"Win Rate: {results.win_rate}")
     print(f"Max drawdown: {results.max_drawdown}")
     print(f"Trade number: {results.trade_number}")
-    print(f"Buy and hold pnl: {results.b_n_h_history}")
     print(f"Excess return compared to B&H: {results.excess_return_vs_buy_and_hold}")

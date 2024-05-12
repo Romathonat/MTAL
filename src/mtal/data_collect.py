@@ -1,4 +1,5 @@
 import pandas as pd
+import polars as pl
 from binance.spot import Spot
 
 client = Spot()
@@ -46,21 +47,25 @@ def get_pair_df(pair="BTCUSDT", limit=400, frequency="1w"):
         "Ignore",
     ]
     try:
-        df = pd.DataFrame(
+        df = pl.DataFrame(
             data=client.klines(pair, interval=frequency, limit=limit),
-            columns=columns,
         )
+        df.columns = columns
+
     except Exception:
         return pd.DataFrame(columns=columns)
 
-    df = df.iloc[:, 0:7]
-    df["Open Time"] = pd.to_datetime(df["Open Time"], unit="ms")
-    df["Close Time"] = pd.to_datetime(df["Close Time"], unit="ms")
-    df["Open"] = pd.to_numeric(df["Open"], errors="coerce")
-    df["High"] = pd.to_numeric(df["High"], errors="coerce")
-    df["Low"] = pd.to_numeric(df["Low"], errors="coerce")
-    df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
-    df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
+    df = df[:, 0:7]
+    df = df.with_columns(pl.from_epoch("Open Time", time_unit="ms"))
+    df = df.with_columns(pl.from_epoch("Close Time", time_unit="ms"))
+
+    df = df.with_columns(
+        df["Open"].cast(pl.Float64),
+        df["High"].cast(pl.Float64),
+        df["Low"].cast(pl.Float64),
+        df["Close"].cast(pl.Float64),
+        df["Volume"].cast(pl.Float64),
+    )
 
     return df
 
@@ -71,13 +76,13 @@ def get_ticker_names():
     return df["ticker_eodhd"]
 
 
-def get_stock_data(ticker):
-    url = f"https://eodhd.com/api/eod/{ticker}?period=w&from=2020-01-05&api_token={API_STOCKS_TOKEN}&fmt=csv"
+def get_stock_data(ticker, period="w"):
+    url = f"https://eodhd.com/api/eod/{ticker}?period={period}&from=2020-01-05&api_token={API_STOCKS_TOKEN}&fmt=csv"
     try:
-        df = pd.read_csv(url)
+        df = pl.read_csv(url)
     except:
-        return pd.DataFrame()
+        return pl.DataFrame()
     if not len(df):
-        return pd.DataFrame()
-    df["Close Time"] = df["Date"]
+        return pl.DataFrame()
+    df = df.with_columns(df["Date"].alias("Close Time"))
     return df

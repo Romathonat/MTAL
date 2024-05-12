@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:0b5736a646f77d67f7a6f5f9156c11095d41b3f3d7436595d70fe12d7123685e"
+content_hash = "sha256:2b808393f8ddce74b4220511aa9de23f63652185c4b98f257e5472821f1bd6ff"
 
 [[package]]
 name = "appnope"
@@ -650,6 +650,21 @@ groups = ["default"]
 files = [
     {file = "pluggy-1.4.0-py3-none-any.whl", hash = "sha256:7db9f7b503d67d1c5b95f59773ebb58a8c1c288129a88665838012cfb07b8981"},
     {file = "pluggy-1.4.0.tar.gz", hash = "sha256:8c85c2876142a764e5b7548e7d9a0e0ddb46f5185161049a79b7e974454223be"},
+]
+
+[[package]]
+name = "polars"
+version = "0.20.25"
+requires_python = ">=3.8"
+summary = "Blazingly fast DataFrame library"
+groups = ["default"]
+files = [
+    {file = "polars-0.20.25-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:126e3b7d9394e4b23b4cc48919b7188203feeeb35d861ad808f281eaa06d76e2"},
+    {file = "polars-0.20.25-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:3bda62b681726538714a1159638ab7c9eeca6b8633fd778d84810c3e13b9c7e3"},
+    {file = "polars-0.20.25-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:62c8826e81c759f07bf5c0ae00f57a537644ae05fe68737185666b8ad8430664"},
+    {file = "polars-0.20.25-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:0fb5e7a4a9831fba742f1c706e01656607089b6362a5e6f8d579b134a99795ce"},
+    {file = "polars-0.20.25-cp38-abi3-win_amd64.whl", hash = "sha256:9eaeb9080c853e11b207d191025e0ba8fd59ea06a36c22d410a48f2f124e18cd"},
+    {file = "polars-0.20.25.tar.gz", hash = "sha256:4308d63f956874bac9ae040bdd6d62b2992d0b1e1349301bc7a3b59458189108"},
 ]
 
 [[package]]
