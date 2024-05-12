@@ -1,4 +1,3 @@
-import pandas as pd
 import polars as pl
 from binance.spot import Spot
 
@@ -53,7 +52,9 @@ def get_pair_df(pair="BTCUSDT", limit=400, frequency="1w"):
         df.columns = columns
 
     except Exception:
-        return pd.DataFrame(columns=columns)
+        out = pl.DataFrame()
+        out.columns = columns
+        return out
 
     df = df[:, 0:7]
     df = df.with_columns(pl.from_epoch("Open Time", time_unit="ms"))
@@ -70,9 +71,19 @@ def get_pair_df(pair="BTCUSDT", limit=400, frequency="1w"):
     return df
 
 
+def map_market(value):
+    return MARKET_SHORTNAME.get(value, value)
+
+
 def get_ticker_names():
-    df = pd.read_csv("./data/stock_list.csv", sep=";")
-    df["ticker_eodhd"] = df["Symbol"] + "." + df["Market"].map(MARKET_SHORTNAME)
+    df = pl.read_csv("./data/stock_list.csv", separator=";", infer_schema_length=10000)
+    df = df.with_columns(
+        (
+            pl.col("Symbol")
+            + "."
+            + pl.col("Market").apply(map_market, return_dtype=pl.String)
+        ).alias("ticker_eodhd")
+    )
     return df["ticker_eodhd"]
 
 
