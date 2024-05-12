@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+import polars as pl
 from ta.trend import WMAIndicator
 
 from src.mtal.utils import get_ma_names
@@ -29,29 +30,32 @@ class Line:
     b: float = 0.0
 
 
-def compute_rsi(df, window=14):
+def compute_rsi(df: pl.DataFrame, window=14) -> pl.DataFrame:
+    df_pd = df.to_pandas()
+
+    if len(df_pd) == 0:
+        return pl.DataFrame()
+    df_pd["Change"] = df_pd["Close"].diff()
+
+    df_pd["Gain"] = df_pd["Change"].mask(df_pd["Change"] < 0, 0)
+    df_pd["Loss"] = -df_pd["Change"].mask(df_pd["Change"] > 0, 0)
+
+    df_pd["Avg Gain"] = df_pd["Gain"].ewm(alpha=1 / window, adjust=False).mean()
+    df_pd["Avg Loss"] = df_pd["Loss"].ewm(alpha=1 / window, adjust=False).mean()
+
+    df_pd["RS"] = df_pd["Avg Gain"] / df_pd["Avg Loss"]
+    df_pd["ema5"] = df_pd["Close"].ewm(span=5, adjust=False).mean()
+
+    df_pd["RSI"] = 100 - (100 / (1 + df_pd["RS"]))
+    df_pd["Volume_MA"] = df_pd["Volume"].rolling(window=20).mean()
+
+    return pl.from_pandas(df_pd)
+
+
+def compute_vzo(df_in: pl.DataFrame, window=14) -> pl.DataFrame:
+    df = df_in.to_pandas()
     if len(df) == 0:
-        return pd.DataFrame()
-
-    df["Change"] = df["Close"].diff()
-
-    df["Gain"] = df["Change"].mask(df["Change"] < 0, 0)
-    df["Loss"] = -df["Change"].mask(df["Change"] > 0, 0)
-
-    df["Avg Gain"] = df["Gain"].ewm(alpha=1 / window, adjust=False).mean()
-    df["Avg Loss"] = df["Loss"].ewm(alpha=1 / window, adjust=False).mean()
-
-    df["RS"] = df["Avg Gain"] / df["Avg Loss"]
-    df["ema5"] = df["Close"].ewm(span=5, adjust=False).mean()
-
-    df["RSI"] = 100 - (100 / (1 + df["RS"]))
-    df["Volume_MA"] = df["Volume"].rolling(window=20).mean()
-    return df
-
-
-def compute_vzo(df, window=14):
-    if len(df) == 0:
-        return pd.DataFrame()
+        return pl.DataFrame()
 
     df["Price Change"] = df["Close"].diff()
     df["Volume Change"] = df["Volume"].diff()
@@ -75,30 +79,33 @@ def compute_vzo(df, window=14):
     # df["VZO Denominator"] = ema_indicator(df["Volume"], window=window)
 
     df["VZO"] = (df["VZO Nominator"] / df["VZO Denominator"]) * 100
-    return df
+    return pl.from_pandas(df)
 
 
-def compute_ema(df, span=9):
+def compute_ema(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
+    df = df_in.to_pandas()
     ema = df["Close"].ewm(span=span, adjust=False).mean()
     df[get_ma_names(span)] = ema
-    return df
+    return pl.from_pandas(df)
 
 
-def compute_vwma(df, span=9):
+def compute_vwma(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
+    df = df_in.to_pandas()
     volume_prices = df["Close"] * df["Volume"]
     sum_volume_prices = volume_prices.rolling(window=span).sum()
     sum_volumes = df["Volume"].rolling(window=span).sum()
     vwma = sum_volume_prices / sum_volumes
 
     df[get_ma_names(span, "vwma")] = vwma
-    return df
+    return pl.from_pandas(df)
 
 
 def weighted_moving_average(close, span=2):
     return WMAIndicator(close=close, window=span).wma()
 
 
-def compute_hma(df, span=9):
+def compute_hma(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
+    df = df_in.to_pandas()
     wma_half = weighted_moving_average(df["Close"], span // 2)
     wma_full = weighted_moving_average(df["Close"], span)
     df["data_hull"] = 2 * wma_half - wma_full
@@ -107,7 +114,7 @@ def compute_hma(df, span=9):
         for i in weighted_moving_average(df["data_hull"], int(np.sqrt(span)))
     ]
 
-    return df
+    return pl.from_pandas(df)
 
 
 def compute_line(x_1, x_2, y_1, y_2):

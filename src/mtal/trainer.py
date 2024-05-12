@@ -2,12 +2,13 @@ from itertools import product
 from typing import Tuple, Type, Union
 
 import pandas as pd
+import polars as pl
 
 from src.mtal.backtesting.common import AbstractBacktest, BacktestResults
 
 
 def train_strategy(
-    data: pd.DataFrame,
+    data: pl.DataFrame,
     backtester_class: Type[AbstractBacktest],
     ranges: dict,
     split=0.8,
@@ -17,7 +18,7 @@ def train_strategy(
 
     cutoff = int(len(data) * split)
 
-    train_data, test_data = data.iloc[:cutoff], data.iloc[cutoff:]
+    train_data, test_data = data[:cutoff], data[cutoff:]
 
     keys, values = zip(*ranges.items())
     param_combinations = [dict(zip(keys, v)) for v in product(*values)]
@@ -25,7 +26,7 @@ def train_strategy(
     results = {}
 
     for params in param_combinations:
-        backtester = backtester_class(train_data.copy(), **params)
+        backtester = backtester_class(train_data.clone(), **params)
         train_result = backtester.run()
 
         results[params.values()] = train_result
@@ -36,7 +37,7 @@ def train_strategy(
     train_result = results[best_combination]
 
     params_test = dict(zip(keys, best_combination))
-    backtester = backtester_class(test_data.copy(), **params_test)
+    backtester = backtester_class(test_data.clone(), **params_test)
     test_results = backtester.run()
 
     return tuple(best_combination), train_result, test_results, train_data, test_data

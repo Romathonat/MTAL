@@ -51,15 +51,15 @@ class AbstractBacktest(ABC):
 
     def run(self) -> BacktestResults:
         for i in range(2, len(self.data)):
-            current_df = self.data.iloc[:i]
+            current_df = self.data[:i]
             if self.is_enter(current_df) and self.current_bet == 0:
                 self._entering_update(current_df)
             elif self.is_exit(current_df) and self.current_bet != 0:
                 self._exiting_update(current_df)
             variation_entry = self.get_variation_to_date(current_df)
             variation_yesterday = (
-                current_df.iloc[-1]["Close"] - current_df.iloc[-2]["Close"]
-            ) / current_df.iloc[-2]["Close"]
+                current_df[-1, "Close"] - current_df[-2, "Close"]
+            ) / current_df[-2, "Close"]
             self.value_history.append(
                 self.cash + (1 + variation_entry) * self.current_bet
             )
@@ -109,7 +109,7 @@ class AbstractBacktest(ABC):
     def get_variation_to_date(self, current_df: DataFrame):
         if self.current_bet:
             variation = (
-                current_df.iloc[-1]["Close"] - self.entry_prices[-1]
+                current_df[-1, "Close"] - self.entry_prices[-1]
             ) / self.entry_prices[-1]
         else:
             variation = 0
@@ -117,20 +117,20 @@ class AbstractBacktest(ABC):
 
     def get_excess_return_vs_buy_and_hold(self, pnl):
         buy_and_hold_perf = (
-            (self.data.iloc[-1]["Close"] - self.data.iloc[0]["Close"])
-            / self.data.iloc[-1]["Close"]
+            (self.data[-1, "Close"] - self.data[0, "Close"])
+            / self.data[-1, "Close"]
             * self.cash_history[0]
         )
         return (pnl - buy_and_hold_perf) / self.cash_history[0]
 
     def _entering_update(self, current_df):
-        self.entry_dates.append(current_df.iloc[-1]["Close Time"])
-        self.entry_prices.append(current_df.iloc[-1]["Close"])
+        self.entry_dates.append(current_df[-1, "Close Time"])
+        self.entry_prices.append(current_df[-1, "Close"])
         self.current_bet, self.cash = self.cash, self.current_bet
 
     def _exiting_update(self, current_df):
-        self.exit_dates.append(current_df.iloc[-1]["Close Time"])
-        self.exit_prices.append(current_df.iloc[-1]["Close"])
+        self.exit_dates.append(current_df[-1, "Close Time"])
+        self.exit_prices.append(current_df[-1, "Close"])
 
         variation = self._get_variation()
         self.profit_history.append(variation * self.current_bet)
@@ -143,7 +143,6 @@ class AbstractBacktest(ABC):
         variation = (self.exit_prices[-1] - self.entry_prices[-1]) / self.entry_prices[
             -1
         ]
-
         if variation > 0:
             self.wins += 1
         else:

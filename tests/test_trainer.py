@@ -1,5 +1,8 @@
+from datetime import date
+
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 
 from src.mtal.backtesting.vzo_rsi import VZO_RSI
@@ -8,7 +11,9 @@ from src.mtal.trainer import train_strategy
 
 @pytest.fixture
 def sample_data():
-    dates = pd.date_range(start="2020-01-01", periods=200)
+    dates = pl.date_range(
+        start=date(2020, 1, 1), end=date(2020, 7, 18), interval="1d", eager=True
+    )
     prices = np.concatenate(
         [
             np.linspace(start=110, stop=100, num=50),  # Descend
@@ -17,18 +22,23 @@ def sample_data():
             np.linspace(start=100, stop=110, num=50),  # Remonte
         ]
     )
-    df = pd.DataFrame(data={"date": dates, "Open": prices})
-    df["Close"] = df["Open"].shift(-1)
-    df["Open Time"] = df["date"]
-    df["Close Time"] = df["date"].shift(-1)
-    df["Volume"] = df["Open"] * 10
-    df.drop(df.index[-1], inplace=True)
-    df.set_index("date", inplace=True)
+
+    df = pl.DataFrame({"date": dates, "Open": prices})
+
+    df = df.with_columns(
+        pl.col("Open").shift(-1).alias("Close"),
+        pl.col("date").alias("Open Time"),
+        pl.col("date").shift(-1).alias("Close Time"),
+        (pl.col("Open") * 10).alias("Volume"),
+    )
+
+    # Drop the last row to match pandas behavior as the shifted 'Close' creates a None at the last position
+    df = df.filter(pl.col("date") != df.select(pl.max("date")).to_series()[0])
 
     return df
 
 
-def test_trainer_no_ranges(sample_data: pd.DataFrame):
+def test_trainer_no_ranges(sample_data: pl.DataFrame):
     ranges = {}
 
     best_params, train_results, test_results, _, _ = train_strategy(
@@ -37,7 +47,7 @@ def test_trainer_no_ranges(sample_data: pd.DataFrame):
     assert train_results is None and test_results is None
 
 
-def test_trainer(sample_data: pd.DataFrame):
+def test_trainer(sample_data: pl.DataFrame):
     ranges = {
         "span": range(1, 3),
         "grey_zone_rsi": range(1, 3),

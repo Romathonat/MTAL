@@ -1,13 +1,12 @@
-import numpy as np
-import pandas as pd
-from pandas.testing import assert_series_equal
+import polars as pl
+from polars.testing import assert_series_equal
 
 from src.mtal.analysis import compute_ema, compute_hma, compute_rsi, compute_vzo
 from src.mtal.utils import get_ma_names
 
 
 def test_compute_rsi_empty():
-    df = pd.DataFrame()
+    df = pl.DataFrame()
 
     df_rsi = compute_rsi(df)
 
@@ -35,13 +34,12 @@ def test_compute_rsi():
         "Volume": [657, 259, 383, 298, 83, 435, 420, 128, 1054, 175],
     }
 
-    df = pd.DataFrame(data=data)
-
+    df = pl.DataFrame(data)
     df_rsi = compute_rsi(df)
 
-    expected_serie = pd.Series(
+    expected_serie = pl.Series(
         [
-            np.nan,
+            None,
             100.0,
             86.66666666666667,
             87.12871287128714,
@@ -53,8 +51,7 @@ def test_compute_rsi():
             65.51280826364248,
         ]
     )
-
-    pd.testing.assert_series_equal(df_rsi["RSI"], expected_serie, check_names=False)
+    assert_series_equal(df_rsi["RSI"], expected_serie, check_names=False)
 
 
 def test_compute_ema():
@@ -74,12 +71,12 @@ def test_compute_ema():
         "Close": [67129, 64977, 65672, 63487, 63835, 61301, 63487, 63835, 64975, 65007],
     }
 
-    df = pd.DataFrame(data=data)
+    df = pl.DataFrame(data=data)
 
     span = 3
     df_ema = compute_ema(df, span=span)
 
-    expected_ema = pd.Series(
+    expected_ema = pl.Series(
         [
             67129.0,
             66053.0,
@@ -92,7 +89,7 @@ def test_compute_ema():
             64229.3671875,
             64618.18359375,
         ],
-        index=df.index,
+        # index=df.index,
     )
     assert_series_equal(df_ema[get_ma_names(span)], expected_ema, check_names=False)
 
@@ -114,14 +111,14 @@ def test_compute_hull_moving_average():
         "Close": [48309, 52115, 51734, 63249, 69049, 68288, 67242, 71333, 69240, 65910],
     }
 
-    df = pd.DataFrame(data=data)
+    df = pl.DataFrame(data=data)
 
     span = 2
     df_hma = compute_hma(df, span=span)
 
-    expected_hma = pd.Series(
+    expected_hma = pl.Series(
         [0, 53383, 51607, 67087, 70982, 68034, 66893, 72696, 68542, 64800],
-        index=df.index,
+        # index=df.index,
     )
 
     assert_series_equal(
@@ -158,11 +155,11 @@ def test_compute_vzo():
         ],
     }
 
-    df = pd.DataFrame(data=data)
+    df = pl.DataFrame(data=data)
 
     df_vzo = compute_vzo(df, window=3)
 
-    expected_serie = pd.Series(
+    expected_serie = pl.Series(
         [
             0.0,
             54.24198061671375,
@@ -177,4 +174,4 @@ def test_compute_vzo():
         ]
     )
 
-    pd.testing.assert_series_equal(df_vzo["VZO"], expected_serie, check_names=False)
+    assert_series_equal(df_vzo["VZO"], expected_serie, check_names=False)

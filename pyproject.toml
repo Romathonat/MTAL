@@ -15,7 +15,7 @@ dependencies = [
     "pytest-cov>=5.0.0",
     "ta>=0.11.0",
     "pandas-ta>=0.3.14b0",
-    "polars>=0.20.25",
+    "polars[all]>=0.20.25",
 ]
 requires-python = "==3.10.*"
 readme = "README.md"

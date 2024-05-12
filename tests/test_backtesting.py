@@ -1,5 +1,7 @@
+from datetime import date, datetime
+
 import numpy as np
-import pandas as pd
+import polars as pl
 import pytest
 
 from src.mtal.backtesting.common import BacktestResults
@@ -9,7 +11,9 @@ from src.mtal.utils import generate_pinescript
 
 @pytest.fixture
 def sample_data():
-    dates = pd.date_range(start="2020-01-01", periods=150)
+    dates = pl.date_range(
+        start=date(2020, 1, 1), end=date(2020, 7, 18), interval="1d", eager=True
+    )
     prices = np.concatenate(
         [
             np.linspace(start=110, stop=100, num=50),  # Descend
@@ -17,34 +21,49 @@ def sample_data():
             np.linspace(start=110, stop=100, num=50),  # Descend
         ]
     )
-    df = pd.DataFrame(data={"date": dates, "Open": prices})
-    df["Close"] = df["Open"].shift(-1)
-    df["Close Time"] = df["date"].shift(-1)
-    df["Open Time"] = df["date"]
-    df.drop(df.index[-1], inplace=True)
-    df.set_index("date", inplace=True)
+
+    dates = dates[: len(prices)]
+    df = pl.DataFrame({"date": dates, "Open": prices})
+
+    df = df.with_columns(
+        pl.col("Open").shift(-1).alias("Close"),
+        pl.col("date").alias("Open Time"),
+        pl.col("date").shift(-1).alias("Close Time"),
+        (pl.col("Open") * 10).alias("Volume"),
+    )
+
+    df = df.filter(pl.col("date") != df.select(pl.max("date")).to_series()[0])
+
     return df
 
 
 @pytest.fixture
 def sample_data_no_exit():
-    dates = pd.date_range(start="2020-01-01", periods=150)
+    dates = pl.date_range(
+        start=date(2020, 1, 1), end=date(2020, 7, 18), interval="1d", eager=True
+    )
     prices = np.concatenate(
         [
             np.linspace(start=110, stop=100, num=50),  # Descend
-            np.linspace(start=100, stop=130, num=100),  # Remonte
+            np.linspace(start=100, stop=110, num=50),  # Remonte
         ]
     )
-    df = pd.DataFrame(data={"date": dates, "Open": prices})
-    df["Close"] = df["Open"].shift(-1)
-    df["Open Time"] = df["date"]
-    df["Close Time"] = df["date"].shift(-1)
+    dates = dates[: len(prices)]
 
-    df.set_index("date", inplace=True)
+    df = pl.DataFrame({"date": dates, "Open": prices})
+
+    df = df.with_columns(
+        pl.col("Open").shift(-1).alias("Close"),
+        pl.col("date").alias("Open Time"),
+        pl.col("date").shift(-1).alias("Close Time"),
+        (pl.col("Open") * 10).alias("Volume"),
+    )
+
+    df = df.filter(pl.col("date") != df.select(pl.max("date")).to_series()[0])
     return df
 
 
-def test_ema_cross_backtester(sample_data: pd.DataFrame):
+def test_ema_cross_backtester(sample_data: pl.DataFrame):
     short_ema = 3
     long_ema = 20
     tester = MACrossBacktester(short_ma=short_ema, long_ma=long_ema, data=sample_data)
@@ -60,21 +79,20 @@ def test_ema_cross_backtester(sample_data: pd.DataFrame):
     assert results.excess_return_vs_buy_and_hold == 0.1642242439144332
 
 
-def test_ema_cross_backtester_no_exit_except_ending(sample_data_no_exit: pd.DataFrame):
+def test_ema_cross_backtester_no_exit_except_ending(sample_data_no_exit: pl.DataFrame):
     short_ema = 3
     long_ema = 20
     tester = MACrossBacktester(
         short_ma=short_ema, long_ma=long_ema, data=sample_data_no_exit
     )
     results = tester.run()
-
     assert isinstance(results, BacktestResults)
     assert results.pnl_percentage > 0
     assert results.max_drawdown is not None
     assert results.win_rate is not None
     assert results.average_return is not None
-    assert results.entry_dates[0] == pd.Timestamp("2020-02-26 00:00:00")
-    assert results.entry_prices[0] == 101.81818181818181
+    assert results.entry_dates[0] == datetime(2020, 2, 28, 0, 0)
+    assert results.entry_prices[0] == 101.63265306122449
     assert len(results.exit_dates) == 1
 
 
@@ -101,7 +119,7 @@ for i = 0 to array.size(exitDates) - 1
     assert generate_pinescript(entry_dates, exit_dates).strip() == pine_script.strip()
 
 
-def test_backtester_no_trade(sample_data_no_exit: pd.DataFrame):
+def test_backtester_no_trade(sample_data_no_exit: pl.DataFrame):
     short_ema = 1
     long_ema = 1
     tester = MACrossBacktester(

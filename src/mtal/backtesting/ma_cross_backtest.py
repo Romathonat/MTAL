@@ -1,4 +1,5 @@
-from pandas import DataFrame
+import polars as pl
+from polars import DataFrame
 
 from src.mtal.analysis import compute_ema, compute_hma, compute_vwma
 from src.mtal.backtesting.common import AbstractBacktest
@@ -6,18 +7,17 @@ from src.mtal.utils import get_ma_names
 
 
 class MACrossBacktester(AbstractBacktest):
-    def __init__(self, data, short_ma=5, long_ma=10, ma_type="ema"):
+    def __init__(self, data: pl.DataFrame, short_ma=5, long_ma=10, ma_type="ema"):
         super().__init__(data, params=self.extract_named_params(locals()))
-
         if ma_type == "vwma":
-            compute_vwma(self.data, short_ma)
-            compute_vwma(self.data, long_ma)
+            self.data = compute_vwma(self.data, short_ma)
+            self.data = compute_vwma(self.data, long_ma)
         elif ma_type == "hma":
-            compute_hma(self.data, short_ma)
-            compute_hma(self.data, long_ma)
+            self.data = compute_hma(self.data, short_ma)
+            self.data = compute_hma(self.data, long_ma)
         else:
-            compute_ema(self.data, short_ma)
-            compute_ema(self.data, long_ma)
+            self.data = compute_ema(self.data, short_ma)
+            self.data = compute_ema(self.data, long_ma)
 
     def is_enter(self, df: DataFrame):
         """
@@ -26,13 +26,13 @@ class MACrossBacktester(AbstractBacktest):
         if len(df) < 3:
             return False
         just_crossed = (
-            df.iloc[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
-            > df.iloc[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
-        )
+            df[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
+            > df[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        ).all()
         uncrossed_before = (
-            df.iloc[-2][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
-            <= df.iloc[-2][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
-        )
+            df[-2][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
+            <= df[-2][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        ).all()
 
         if just_crossed and uncrossed_before:
             return True
@@ -43,13 +43,13 @@ class MACrossBacktester(AbstractBacktest):
             return False
 
         just_crossed = (
-            df.iloc[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
-            < df.iloc[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
-        )
+            df[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
+            < df[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        ).all()
         uncrossed_before = (
-            df.iloc[-2][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
-            >= df.iloc[-2][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
-        )
+            df[-2][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
+            >= df[-2][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        ).all()
         if just_crossed and uncrossed_before:
             return True
         return False
@@ -59,14 +59,14 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
     def __init__(self, data, short_ma=5, long_ma=10, ma_type="ema"):
         super().__init__(data, params=self.extract_named_params(locals()))
         if ma_type == "vwma":
-            compute_vwma(self.data, short_ma)
-            compute_vwma(self.data, long_ma)
+            self.data = compute_vwma(self.data, short_ma)
+            self.data = compute_vwma(self.data, long_ma)
         elif ma_type == "hma":
-            compute_hma(self.data, short_ma)
-            compute_hma(self.data, long_ma)
+            self.data = compute_hma(self.data, short_ma)
+            self.data = compute_hma(self.data, long_ma)
         else:
-            compute_ema(self.data, short_ma)
-            compute_ema(self.data, long_ma)
+            self.data = compute_ema(self.data, short_ma)
+            self.data = compute_ema(self.data, long_ma)
 
     def is_enter(self, df: DataFrame):
         """
@@ -75,17 +75,16 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
         if len(df) < 3:
             return False
         just_crossed = (
-            df.iloc[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
-            > df.iloc[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
-        )
+            df[-1][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
+            > df[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        ).all()
         uncrossed_before = (
-            df.iloc[-2][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
-            <= df.iloc[-2][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
-        )
+            df[-2][get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
+            <= df[-2][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        ).all()
         price_above = (
-            df.iloc[-1]["Close"]
-            > df.iloc[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
-        )
+            df[-1]["Close"] > df[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        ).all()
 
         if just_crossed and uncrossed_before and price_above:
             return True
@@ -99,9 +98,8 @@ class MACrossPriceAboveBacktester(AbstractBacktest):
             return False
 
         cross_down = (
-            df.iloc[-1]["Close"]
-            < df.iloc[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
-        )
+            df[-1]["Close"] < df[-1][get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        ).all()
 
         if cross_down:
             return True
