@@ -1,4 +1,4 @@
-from pandas import DataFrame
+from polars import DataFrame
 
 from src.mtal.analysis import compute_rsi, compute_vzo
 from src.mtal.backtesting.common import AbstractBacktest

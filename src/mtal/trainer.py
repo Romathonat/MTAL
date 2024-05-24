@@ -1,7 +1,6 @@
 from itertools import product
-from typing import Tuple, Type, Union
+from typing import Tuple, Type
 
-import pandas as pd
 import polars as pl
 
 from src.mtal.backtesting.common import AbstractBacktest, BacktestResults
@@ -12,11 +11,15 @@ def train_strategy(
     backtester_class: Type[AbstractBacktest],
     ranges: dict,
     split=0.8,
-) -> Union[Tuple, BacktestResults, BacktestResults, pd.DataFrame, pd.DataFrame]:
+    test_size=None,
+) -> Tuple[Tuple, BacktestResults, BacktestResults, pl.DataFrame, pl.DataFrame]:
     if not ranges:
         return None, None, None, None, None
 
-    cutoff = int(len(data) * split)
+    if not test_size:
+        cutoff = int(len(data) * split)
+    else:
+        cutoff = len(data) - test_size
 
     train_data, test_data = data[:cutoff], data[cutoff:]
 
