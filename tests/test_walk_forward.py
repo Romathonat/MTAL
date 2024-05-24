@@ -49,4 +49,5 @@ def test_walk_forward(sample_data: pl.DataFrame):
 
     assert len(results) == 5
     assert all(isinstance(result[1], BacktestResults) for result in results)
+    assert len(results[0][0]) == 24
     assert results[-3][1].win_rate == 1

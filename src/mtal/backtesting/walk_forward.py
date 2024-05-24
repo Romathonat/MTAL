@@ -1,6 +1,5 @@
 from typing import List, Tuple, Type
 
-from param import DataFrame
 import polars as pl
 
 from src.mtal.backtesting.common import AbstractBacktest, BacktestResults
@@ -26,7 +25,7 @@ class WalkForward:
             best_params, train_results, test_results, train_df, test_df = (
                 train_strategy(data, self.backtester, self.ranges, test_size=test_size)
             )
-            results.append((data, test_results))
+            results.append((data[-test_size:], test_results))
         return results
 
     def _create_segments(self, k: int) -> Tuple[List[int], int]:
