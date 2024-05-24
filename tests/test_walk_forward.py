@@ -48,6 +48,5 @@ def test_walk_forward(sample_data: pl.DataFrame):
     results = wf.run()
 
     assert len(results) == 5
-    assert all(isinstance(i, BacktestResults) for i in results)
-    print(results)
-    assert results[-3].win_rate == 1
+    assert all(isinstance(result[1], BacktestResults) for result in results)
+    assert results[-3][1].win_rate == 1
