@@ -5,6 +5,7 @@ import pandas as pd
 import polars as pl
 import pytest
 
+from src.mtal.backtesting.ma_cross_backtest import MACrossBacktester
 from src.mtal.backtesting.vzo_rsi import VZO_RSI
 from src.mtal.trainer import train_strategy
 
@@ -63,6 +64,27 @@ def test_trainer(sample_data: pl.DataFrame):
     assert train_results.trade_number == 1
     assert train_results.win_rate == 1.0
     assert train_results.exit_dates[0] == pd.Timestamp("2020-04-09 00:00:00")
+    assert test_results.trade_number == 1
+    assert test_results.exit_dates[0] == pd.Timestamp("2020-07-17 00:00:00")
+    assert len(train_df) + 1 == len(test_df)
+
+
+def test_trainer_ema_cross_one_combination(sample_data: pl.DataFrame):
+    ranges = {
+        "short_ma": range(3, 4),
+        "long_ma": range(20, 21),
+    }
+
+    best_params, train_results, test_results, train_df, test_df = train_strategy(
+        sample_data, MACrossBacktester, ranges, test_size=100
+    )  # type: ignore
+
+    assert len(best_params) == 2
+    assert best_params == (3, 20)
+    assert train_results.trade_number == 1
+    assert train_results.win_rate == 1.0
+    assert train_results.entry_dates[0] == pd.Timestamp("2020-02-28 00:00:00")
+    assert train_results.entry_prices[0] == 101.63265306122449
     assert test_results.trade_number == 1
     assert test_results.exit_dates[0] == pd.Timestamp("2020-07-17 00:00:00")
     assert len(train_df) + 1 == len(test_df)
