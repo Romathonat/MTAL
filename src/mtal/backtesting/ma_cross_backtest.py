@@ -7,8 +7,21 @@ from src.mtal.utils import get_ma_names
 
 
 class MACrossBacktester(AbstractBacktest):
-    def __init__(self, data: pl.DataFrame, short_ma=5, long_ma=10, ma_type="ema"):
-        super().__init__(data, params=self.extract_named_params(locals()))
+    def __init__(
+        self,
+        data: pl.DataFrame,
+        short_ma=5,
+        long_ma=10,
+        ma_type="ema",
+        cutoff_begin=None,
+        cutoff_end=None,
+    ):
+        super().__init__(
+            data,
+            cutoff_begin=cutoff_begin,
+            cutoff_end=cutoff_end,
+            params=self.extract_named_params(locals()),
+        )
         if ma_type == "vwma":
             self.data = compute_vwma(self.data, short_ma)
             self.data = compute_vwma(self.data, long_ma)
@@ -56,8 +69,21 @@ class MACrossBacktester(AbstractBacktest):
 
 
 class MACrossPriceAboveBacktester(AbstractBacktest):
-    def __init__(self, data, short_ma=5, long_ma=10, ma_type="ema"):
-        super().__init__(data, params=self.extract_named_params(locals()))
+    def __init__(
+        self,
+        data,
+        short_ma=5,
+        long_ma=10,
+        ma_type="ema",
+        cutoff_begin=None,
+        cutoff_end=None,
+    ):
+        super().__init__(
+            data,
+            cutoff_begin=cutoff_begin,
+            cutoff_end=cutoff_end,
+            params=self.extract_named_params(locals()),
+        )
         if ma_type == "vwma":
             self.data = compute_vwma(self.data, short_ma)
             self.data = compute_vwma(self.data, long_ma)

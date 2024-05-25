@@ -62,7 +62,7 @@ def test_trainer(sample_data: pl.DataFrame):
     assert best_params == (1, 1, 1)
     assert train_results.trade_number == 1
     assert train_results.win_rate == 1.0
-    assert train_results.exit_dates[0] == pd.Timestamp("2020-04-08 00:00:00")
+    assert train_results.exit_dates[0] == pd.Timestamp("2020-04-09 00:00:00")
     assert test_results.trade_number == 1
     assert test_results.exit_dates[0] == pd.Timestamp("2020-07-17 00:00:00")
     assert len(train_df) + 1 == len(test_df)
@@ -83,7 +83,7 @@ def test_trainer_fixed_size_test_window(sample_data: pl.DataFrame):
     assert best_params == (1, 1, 1)
     assert train_results.trade_number == 1
     assert train_results.win_rate == 1.0
-    assert train_results.exit_dates[0] == pd.Timestamp("2020-04-08 00:00:00")
+    assert train_results.exit_dates[0] == pd.Timestamp("2020-04-09 00:00:00")
     assert test_results.trade_number == 1
     assert test_results.exit_dates[0] == pd.Timestamp("2020-07-17 00:00:00")
     assert len(train_df) + 1 == len(test_df)

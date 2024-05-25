@@ -21,15 +21,13 @@ def train_strategy(
     else:
         cutoff = len(data) - test_size
 
-    train_data, test_data = data[:cutoff], data[cutoff:]
-
     keys, values = zip(*ranges.items())
     param_combinations = [dict(zip(keys, v)) for v in product(*values)]
 
     results = {}
 
     for params in param_combinations:
-        backtester = backtester_class(train_data.clone(), **params)
+        backtester = backtester_class(data.clone(), **params, cutoff_end=cutoff)
         train_result = backtester.run()
 
         results[params.values()] = train_result
@@ -40,7 +38,13 @@ def train_strategy(
     train_result = results[best_combination]
 
     params_test = dict(zip(keys, best_combination))
-    backtester = backtester_class(test_data.clone(), **params_test)
+    backtester = backtester_class(data.clone(), cutoff_begin=cutoff, **params_test)
     test_results = backtester.run()
 
-    return tuple(best_combination), train_result, test_results, train_data, test_data
+    return (
+        tuple(best_combination),
+        train_result,
+        test_results,
+        data[0:cutoff],
+        data[cutoff:],
+    )

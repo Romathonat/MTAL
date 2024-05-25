@@ -5,8 +5,21 @@ from src.mtal.backtesting.common import AbstractBacktest
 
 
 class VZO_RSI(AbstractBacktest):
-    def __init__(self, data, span=14, grey_zone_rsi=5, grey_zone_vzo=5):
-        super().__init__(data, params=self.extract_named_params(locals()))
+    def __init__(
+        self,
+        data,
+        span=14,
+        grey_zone_rsi=5,
+        grey_zone_vzo=5,
+        cutoff_begin=None,
+        cutoff_end=None,
+    ):
+        super().__init__(
+            data,
+            cutoff_begin=cutoff_begin,
+            cutoff_end=cutoff_end,
+            params=self.extract_named_params(locals()),
+        )
         self.data = compute_rsi(self.data, window=span)
         self.data = compute_vzo(self.data, window=span)
 
@@ -25,8 +38,21 @@ class VZO_RSI(AbstractBacktest):
 
 
 class VZO_RSI_let_grey(AbstractBacktest):
-    def __init__(self, data, span=14, grey_zone_rsi=5, grey_zone_vzo=5):
-        super().__init__(data, params=self.extract_named_params(locals()))
+    def __init__(
+        self,
+        data,
+        span=14,
+        grey_zone_rsi=5,
+        grey_zone_vzo=5,
+        cutoff_begin=None,
+        cutoff_end=None,
+    ):
+        super().__init__(
+            data,
+            cutoff_begin=cutoff_begin,
+            cutoff_end=cutoff_end,
+            params=self.extract_named_params(locals()),
+        )
         self.data = compute_rsi(self.data, window=span)
         self.data = compute_vzo(self.data, window=span)
 

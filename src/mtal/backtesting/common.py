@@ -25,12 +25,20 @@ class BacktestResults:
 
 
 class AbstractBacktest(ABC):
-    def __init__(self, data, params={}, cash=1000, cutoff=None) -> None:
+    def __init__(
+        self, data, params={}, cash=1000, cutoff_begin=None, cutoff_end=None
+    ) -> None:
         self.data = data
-        if cutoff is None:
-            self.cutoff = len(self.data - 1)
+        if cutoff_begin is None:
+            self.cutoff_begin = 0
         else:
-            self.cutoff = cutoff
+            self.cutoff_begin = cutoff_begin
+
+        if cutoff_end is None:
+            self.cutoff_end = len(data) - 1
+        else:
+            self.cutoff_end = cutoff_end
+
         self.cash = cash
         self.current_bet = 0
         self.wins = 0
@@ -51,11 +59,13 @@ class AbstractBacktest(ABC):
     def extract_named_params(self, params):
         del params["self"]
         del params["data"]
+        del params["cutoff_begin"]
+        del params["cutoff_end"]
         return params
 
     def run(self) -> BacktestResults:
-        for i in range(2, len(self.data[-self.cutoff :])):
-            current_df = self.data[:i]
+        for i in range(self.cutoff_begin + 2, self.cutoff_end + 1):
+            current_df = self.data[self.cutoff_begin : i]
             if self.is_enter(current_df) and self.current_bet == 0:
                 self._entering_update(current_df)
             elif self.is_exit(current_df) and self.current_bet != 0:
