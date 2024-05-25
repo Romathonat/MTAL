@@ -118,7 +118,7 @@ class AbstractBacktest(ABC):
     def get_excess_return_vs_buy_and_hold(self, pnl):
         buy_and_hold_perf = (
             (self.data[-1, "Close"] - self.data[0, "Close"])
-            / self.data[-1, "Close"]
+            / self.data[0, "Close"]
             * self.cash_history[0]
         )
         return (pnl - buy_and_hold_perf) / self.cash_history[0]

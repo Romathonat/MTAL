@@ -25,6 +25,7 @@ class WalkForward:
             best_params, train_results, test_results, train_df, test_df = (
                 train_strategy(data, self.backtester, self.ranges, test_size=test_size)
             )
+            print(best_params)
             results.append((data[-test_size:], test_results))
         return results
 

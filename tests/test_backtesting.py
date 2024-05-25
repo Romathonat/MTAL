@@ -76,7 +76,7 @@ def test_ema_cross_backtester(sample_data: pl.DataFrame):
     assert results.normalized_pnl is not None
     assert len(results.value_history) == len(sample_data)
     assert len(results.b_n_h_history) == len(sample_data)
-    assert results.excess_return_vs_buy_and_hold == 0.1642242439144332
+    assert results.excess_return_vs_buy_and_hold == 0.1554843910959824
 
 
 def test_ema_cross_backtester_no_exit_except_ending(sample_data_no_exit: pl.DataFrame):
