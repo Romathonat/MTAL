@@ -90,7 +90,7 @@ def get_ticker_names():
 def get_stock_data(ticker, period="w"):
     url = f"https://eodhd.com/api/eod/{ticker}?period={period}&from=2020-01-05&api_token={API_STOCKS_TOKEN}&fmt=csv"
     try:
-        df = pl.read_csv(url)
+        df = pl.read_csv(url, try_parse_dates=True)
     except:
         return pl.DataFrame()
     if not len(df):

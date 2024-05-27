@@ -6,6 +6,7 @@ class BacktestPorfolioResults:
     pnl: float
     # pnl_percentage: float
     # max_drawdown: float
+    date_history: list
     value_history: list
 
 
@@ -32,16 +33,19 @@ class PortfolioRebalance:
         self.asset_tick_values_history = [asset_tick_values]
 
         self.value_history = [value]
+        self.date_history = [asset[0, "Date"]]
 
     def run(self):
         for i in range(len(self.assets[0])):
-            current_date = self.assets[0][i, "date"]
+            current_date = self.assets[0][i, "Date"]
             if self.is_start_of_period(current_date):
                 self.rebalance(i)
                 self.update_tick_value_history(i)
 
         return BacktestPorfolioResults(
-            pnl=self.value_history[-1], value_history=self.value_history
+            pnl=self.value_history[-1],
+            value_history=self.value_history,
+            date_history=self.date_history,
         )
 
     def update_tick_value_history(self, i):
@@ -76,3 +80,4 @@ class PortfolioRebalance:
 
         self.asset_values_history.append(assets_values_rebalanced)
         self.value_history.append(total_value)
+        self.date_history.append(self.assets[0][i, "Date"])

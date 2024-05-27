@@ -4,6 +4,7 @@ import pandas as pd
 
 from src.mtal.analysis import compute_line
 from src.mtal.backtesting.common import BacktestResults
+from src.mtal.backtesting.portfolio.rebalance import BacktestPorfolioResults
 
 
 def plot_rsi(df_rsi, limit=30):
@@ -169,7 +170,7 @@ def display_crypto(best_lines, limit):
         )
 
 
-def display_portfolio_value(df: pd.DataFrame, results: BacktestResults):
+def display_strat_value_over_time(df: pd.DataFrame, results: BacktestResults):
     plt.figure(figsize=(10, 5))  # Taille de la figure
     plt.plot(df["Close Time"], results.value_history, label="Valeur du Portefeuille")
     plt.plot(
@@ -188,9 +189,23 @@ def display_portfolio_value(df: pd.DataFrame, results: BacktestResults):
 
 
 def display_strategy_results(df: pd.DataFrame, results: BacktestResults):
-    display_portfolio_value(df, results)
+    display_strat_value_over_time(df, results)
     print(f"pnl: {results.pnl}")
     print(f"Win Rate: {results.win_rate}")
     print(f"Max drawdown: {results.max_drawdown}")
     print(f"Trade number: {results.trade_number}")
     print(f"Excess return compared to B&H: {results.excess_return_vs_buy_and_hold}")
+
+
+def display_portfolio_value(results: BacktestPorfolioResults):
+    plt.figure(figsize=(10, 5))  # Taille de la figure
+    plt.plot(
+        results.date_history, results.value_history, label="Valeur du Portefeuille"
+    )
+    plt.title("Évolution de la Valeur du Portefeuille")  # Titre du graphique
+    plt.xlabel("Date")  # Étiquette de l'axe des x
+    plt.ylabel("Valeur")  # Étiquette de l'axe des y
+    plt.legend()  # Ajouter une légende
+    plt.grid(True)  # Ajouter une grille pour faciliter la lecture
+    plt.tight_layout()  # Ajuster automatiquement les paramètres de la figure
+    plt.show()  # Afficher le graphique
