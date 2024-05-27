@@ -76,22 +76,26 @@ def test_backtesting_portfolio(
 
 # TODO: check different asset size in time
 
-# def test_backtesting_portfolio_no_sum_equal_to_one(
-#     sample_data_1: pl.DataFrame,
-#     sample_data_2: pl.DataFrame,
-#     sample_data_3: pl.DataFrame,
-# ):
-#     results = PortfolioRebalance(sample_data_1, sample_data_2, sample_data_3, 10, 20, 70)
 
-#     pass
+def test_backtesting_portfolio_no_sum_equal_to_one(
+    sample_data_1: pl.DataFrame,
+    sample_data_2: pl.DataFrame,
+):
+    assets = [sample_data_1, sample_data_2]
+    weights = [50, 60]
 
-# def test_backtesting_portfolio_with_cash(
-#     sample_data_1: pl.DataFrame,
-#     sample_data_2: pl.DataFrame,
-#     sample_data_3: pl.DataFrame,
-# ):
-#     cash_data = sample_data_1.clone()
-#     cash_data[:, "Close"] = 1000
-#     results = PortfolioRebalance(sample_data_1, sample_data_2, sample_data_3, cash_data, 10, 20, 70)
+    with pytest.raises(ValueError, match="The sum of weights must be 100"):
+        PortfolioRebalance(assets, weights, freq="M").run()
 
-#     pass
+
+def test_backtesting_portfolio_with_cash(
+    sample_data_1: pl.DataFrame,
+    sample_data_2: pl.DataFrame,
+):
+    assets = [sample_data_1, sample_data_2]
+    weights = [50, 30, 20]
+
+    with pytest.raises(
+        ValueError, match="The number of assets must match the number of weights"
+    ):
+        PortfolioRebalance(assets, weights, freq="M").run()

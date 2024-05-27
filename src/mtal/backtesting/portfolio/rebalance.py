@@ -11,6 +11,11 @@ class BacktestPorfolioResults:
 
 class PortfolioRebalance:
     def __init__(self, assets, weights, freq="M", value=1000) -> None:
+        if len(assets) != len(weights):
+            raise ValueError("The number of assets must match the number of weights")
+        if sum(weights) != 100:
+            raise ValueError("The sum of weights must be 100")
+
         self.assets = assets
         self.weights = [weight / 100 for weight in weights]
         self.freq = freq
