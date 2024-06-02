@@ -22,6 +22,7 @@ class BacktestResults:
     value_history: list
     b_n_h_history: list
     excess_return_vs_buy_and_hold: float
+    kelly_criterion: float
 
 
 class AbstractBacktest(ABC):
@@ -117,6 +118,9 @@ class AbstractBacktest(ABC):
             value_history=self.value_history,
             b_n_h_history=self.b_n_h_history,
             excess_return_vs_buy_and_hold=self.get_excess_return_vs_buy_and_hold(pnl),
+            kelly_criterion=self.compute_kelly_criterion(
+                win_rate, self.profit_pct_history
+            ),
         )
         return results
 
@@ -136,6 +140,33 @@ class AbstractBacktest(ABC):
             * self.cash_history[0]
         )
         return (pnl - buy_and_hold_perf) / self.cash_history[0]
+
+    def compute_kelly_criterion(
+        self, win_rate: float, profit_pct_history: list
+    ) -> float:
+        wins = list(filter(lambda x: x > 0, profit_pct_history))
+        losses = list(filter(lambda x: x < 0, profit_pct_history))
+
+        if wins:
+            G = sum(wins) / len(wins)
+        else:
+            G = 0
+
+        if losses:
+            V = abs(sum(losses) / len(losses))
+        else:
+            V = 0
+
+        print(V)
+        print(G)
+        print(win_rate)
+
+        if G == 0:
+            return 0
+        elif V == 0:
+            return 100
+        else:
+            return (win_rate / V) - ((1 - win_rate) / G)
 
     def _entering_update(self, current_df):
         self.entry_dates.append(current_df[-1, "Close Time"])

@@ -108,7 +108,7 @@ class ThreeMARetest(AbstractBacktest):
         """
         We enter at the current open if the previous ema is a cross
         """
-        if len(df) < 3:
+        if len(df) <= self.long_ma + 5:
             return False
 
         retest = (
@@ -128,7 +128,7 @@ class ThreeMARetest(AbstractBacktest):
         return False
 
     def is_exit(self, df: DataFrame):
-        if len(df) < 3:
+        if len(df) <= self.long_ma:
             return False
 
         just_crossed = (

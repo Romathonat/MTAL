@@ -56,9 +56,12 @@ class PortfolioRebalance:
 
     def is_start_of_period(self, date):
         if self.freq == "M":
-            return date.day == 1
+            return date.month != self.date_history[-1].month
         elif self.freq == "W":
-            return date.weekday() == 0
+            return (
+                date.isocalendar().week != self.date_history[-1].isocalendar().week
+                or date.year != self.date_history[-1].year
+            )
         else:
             raise ValueError("Frequency not supported")
 

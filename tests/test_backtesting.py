@@ -71,12 +71,13 @@ def test_ema_cross_backtester(sample_data: pl.DataFrame):
     assert isinstance(results, BacktestResults)
     assert results.pnl_percentage > 0
     assert results.max_drawdown is not None
-    assert results.win_rate is not None
+    assert results.win_rate == 1
     assert results.average_return is not None
     assert results.normalized_pnl is not None
     assert len(results.value_history) == len(sample_data)
     assert len(results.b_n_h_history) == len(sample_data)
     assert results.excess_return_vs_buy_and_hold == 0.1554843910959824
+    assert results.kelly_criterion == 100
 
 
 def test_ema_cross_backtester_no_exit_except_ending(sample_data_no_exit: pl.DataFrame):
@@ -131,3 +132,23 @@ def test_backtester_no_trade(sample_data_no_exit: pl.DataFrame):
     assert results.average_return == 0
     assert results.max_drawdown == 0
     assert results.entry_dates == []
+
+
+def test_ema_cross_backtester_kelly_criterion_2_trades(sample_data: pl.DataFrame):
+    short_ema = 3
+    long_ema = 20
+    tester = MACrossBacktester(
+        short_ma=short_ema, long_ma=long_ema, data=pl.concat([sample_data, sample_data])
+    )
+
+    results = tester.run()
+    assert isinstance(results, BacktestResults)
+    assert results.pnl_percentage > 0
+    assert results.max_drawdown is not None
+    assert results.win_rate == 2 / 3
+    assert results.average_return is not None
+    assert results.normalized_pnl is not None
+    assert len(results.value_history) == len(sample_data) * 2
+    assert len(results.b_n_h_history) == len(sample_data) * 2
+    assert results.excess_return_vs_buy_and_hold == 0.19021549088817305
+    assert results.kelly_criterion == 16.067736185383204

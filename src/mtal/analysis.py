@@ -90,14 +90,16 @@ def compute_ema(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
 
 
 def compute_vwma(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
-    df = df_in.to_pandas()
-    volume_prices = df["Close"] * df["Volume"]
-    sum_volume_prices = volume_prices.rolling(window=span).sum()
-    sum_volumes = df["Volume"].rolling(window=span).sum()
+    volume_prices = df_in["Close"] * df_in["Volume"]
+
+    sum_volume_prices = volume_prices.rolling_sum(window_size=span)
+    sum_volumes = df_in["Volume"].rolling_sum(window_size=span)
+
     vwma = sum_volume_prices / sum_volumes
 
-    df[get_ma_names(span, "vwma")] = vwma
-    return pl.from_pandas(df)
+    vwma_col_name = f"vwma_{span}"
+
+    return df_in.with_columns(vwma.alias(vwma_col_name))
 
 
 def weighted_moving_average(close, span=2):
@@ -114,6 +116,25 @@ def compute_hma(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
         for i in weighted_moving_average(df["data_hull"], int(np.sqrt(span)))
     ]
 
+    return pl.from_pandas(df)
+
+
+def compute_hma_on_rsi(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
+    df = df_in.to_pandas()
+    wma_half = weighted_moving_average(df["RSI"], span // 2)
+    wma_full = weighted_moving_average(df["RSI"], span)
+    df["data_hull"] = 2 * wma_half - wma_full
+    df[get_ma_names(span, prefix="hma", suffix="_on_RSI")] = [
+        int(i) if not np.isnan(i) else 0
+        for i in weighted_moving_average(df["data_hull"], int(np.sqrt(span)))
+    ]
+    return pl.from_pandas(df)
+
+
+def compute_ema_on_rsi(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
+    df = df_in.to_pandas()
+    ema = df["RSI"].ewm(span=span, adjust=False).mean()
+    df[get_ma_names(span, prefix="ema", suffix="_on_RSI")] = ema
     return pl.from_pandas(df)
 
 

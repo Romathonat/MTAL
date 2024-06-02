@@ -1,5 +1,5 @@
-def get_ma_names(span, prefix="ema"):
-    return f"{prefix}_{span}"
+def get_ma_names(span, prefix="ema", suffix=""):
+    return f"{prefix}_{span}{suffix}"
 
 
 def generate_pinescript(entry_dates, exit_dates):
