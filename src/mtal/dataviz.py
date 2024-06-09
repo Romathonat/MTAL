@@ -83,8 +83,8 @@ def plot_rsi_with_line(x_1, x_2, y_1, y_2, df_rsi, limit=100):
 
     # Tracé du RSI
     ax.plot(
-        df_rsi.iloc[-limit:].index,
-        df_rsi.iloc[-limit:]["RSI"],
+        df_rsi[-limit:, "index"],
+        df_rsi[-limit:, "RSI"],
         label="RSI",
         color="purple",
     )
@@ -93,13 +93,13 @@ def plot_rsi_with_line(x_1, x_2, y_1, y_2, df_rsi, limit=100):
 
     # Mise à l'échelle des volumes pour l'affichage
     base_line = 0
-    scaled_volume = (
-        df_rsi.iloc[-limit:]["Volume"] / df_rsi.iloc[-limit:]["Volume"].max()
-    ) * (70 * 0.3)  # Ajustement pour l'affichage
+    scaled_volume = (df_rsi[-limit:, "Volume"] / df_rsi[-limit:, "Volume"].max()) * (
+        70 * 0.3
+    )  # Ajustement pour l'affichage
 
     # Tracé des volumes
     ax.bar(
-        df_rsi.iloc[-limit:].index,
+        df_rsi[-limit:, "index"],
         scaled_volume,
         width=0.8,
         bottom=base_line,
@@ -109,12 +109,12 @@ def plot_rsi_with_line(x_1, x_2, y_1, y_2, df_rsi, limit=100):
 
     # Mise à l'échelle de la moyenne mobile du volume pour l'affichage
     scaled_volume_MA = (
-        df_rsi.iloc[-limit:]["Volume_MA"] / df_rsi.iloc[-limit:]["Volume"].max()
+        df_rsi[-limit:, "Volume_MA"] / df_rsi[-limit:, "Volume"].max()
     ) * (70 * 0.3)
 
     # Tracé de la moyenne mobile du volume
     ax.plot(
-        df_rsi.iloc[-limit:].index,
+        df_rsi[-limit:, "index"],
         scaled_volume_MA + base_line,
         label="Volume MA14",
         color="orange",
@@ -130,18 +130,18 @@ def plot_rsi_with_line(x_1, x_2, y_1, y_2, df_rsi, limit=100):
     a, b = compute_line(x_1, x_2, y_1, y_2)
     draw_line(a, b, x_1, len(df_rsi))
     plt.scatter(
-        df_rsi.index[[x_1, x_2]], [y_1, y_2], color="red", label="Points spécifiques"
+        df_rsi[[x_1, x_2], "index"], [y_1, y_2], color="red", label="Points spécifiques"
     )
 
     plt.show()
 
 
 def get_x_y_from_df(df_rsi, i_1, i_2):
-    x_1 = df_rsi.index[-i_1]
-    x_2 = df_rsi.index[-i_2]
+    x_1 = df_rsi[-i_1, "index"]
+    x_2 = df_rsi[-i_2, "index"]
 
-    y_1 = df_rsi.loc[x_1, "RSI"]
-    y_2 = df_rsi.loc[x_2, "RSI"]
+    y_1 = df_rsi[x_1, "RSI"]
+    y_2 = df_rsi[x_2, "RSI"]
     return x_2, x_1, y_2, y_1
 
 

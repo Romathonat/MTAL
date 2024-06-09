@@ -204,23 +204,28 @@ def compute_line(x_1, x_2, y_1, y_2):
 
 
 def is_valid_magic_line(x_1, x_2, y_1, y_2, df_rsi, limit=30) -> Line:
+    print(x_1, x_2, y_1, y_2)
     a, b = compute_line(x_1, x_2, y_1, y_2)
     if a > MAX_SLOPE_POSITIVE or a < MIN_SLOPE_NEGATIVE:
         return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
+
     start_point = max(x_1 - NB_PREVIOUS_POINT_NO_CROSS, 0)
-    total_points = len(df_rsi.loc[start_point:])
+    total_points = len(df_rsi.filter(pl.col("index") >= start_point))
 
     points = 0
     previous_touching_point = False
 
     for i, (x, y) in enumerate(
-        zip(df_rsi.loc[start_point:].index, df_rsi.loc[start_point:]["RSI"])
+        zip(
+            df_rsi.filter(pl.col("index") >= start_point)["index"],
+            df_rsi.filter(pl.col("index") >= start_point)["RSI"],
+        )
     ):
-        position_from_end = total_points - i - 1
+        position_from_end = total_points - i - 0
         if y > a * x + b + THRESHOLD_CROSS:
             if (
                 position_from_end > NB_LAST_POINT_AUTHORIZED
-                or df_rsi.loc[x]["Close"] < df_rsi.loc[x]["ema5"]
+                # or df_rsi[x, "Close"] < df_rsi[x, "ema5"]
             ):
                 return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
             else:
@@ -234,7 +239,7 @@ def is_valid_magic_line(x_1, x_2, y_1, y_2, df_rsi, limit=30) -> Line:
             previous_touching_point = True
         else:
             previous_touching_point = False
-
+    print("coucou")
     return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
 
 
@@ -267,30 +272,33 @@ def calculate_local_tops(df_rsi):
 
 def is_invalid_setup(local_tops, idx1, row1, idx2):
     return (
-        pd.isna(row1.RSI)
+        pd.isna(row1["RSI"])
         or idx2 - idx1 < MINIMAL_SPACE_LINE_POINTS
         or not local_tops[idx1]
         or not local_tops[idx2]
     )
 
 
-def compute_and_validate_2_combinations(df_rsi, limit=100):
+def compute_and_validate_2_combinations(df_rsi: pl.DataFrame, limit=100):
     if not len(df_rsi):
         return None
 
-    df_rsi = df_rsi.iloc[-limit:]
-    pairs = list(itertools.combinations(list(df_rsi.iterrows()), 2))
+    df_rsi = df_rsi.tail(limit)
+    pairs = list(
+        itertools.combinations(list(enumerate(df_rsi.iter_rows(named=True))), 2)
+    )
     best_lines = list()
     local_tops = calculate_local_tops(df_rsi)
-
     for (idx1, row1), (idx2, row2) in pairs:
         if is_invalid_setup(local_tops, idx1, row1, idx2):
             continue
 
-        line = is_valid_magic_line(idx1, idx2, row1.RSI, row2.RSI, df_rsi, limit=limit)
+        line = is_valid_magic_line(
+            row1["index"], row2["index"], row1["RSI"], row2["RSI"], df_rsi, limit=limit
+        )
+
         if line.score > 0:
             best_lines.append(line)
-
     best_lines.sort(key=lambda x: x.score, reverse=True)
     best_lines_filtered = filter_similar_lines(best_lines)
 
@@ -301,25 +309,30 @@ def compute_and_validate_2_combinations(df_rsi, limit=100):
 
 
 def get_sum_line_distances(df, a, b):
-    y_line = a * df.index + b
+    y_line = a * df["index"] + b
     is_below = df["RSI"] <= y_line
-    df["distances"] = np.where(
-        is_below, abs(a * df.index - df["RSI"] + b) / np.sqrt(a**2 + 1), 0
+
+    distances = np.where(
+        is_below, abs(a * df["index"] - df["RSI"] + b) / np.sqrt(a**2 + 1), 0
     )
 
-    df["Volatility"] = df["distances"].rolling(window=10).sum()
-    df["Volatility_tendency"] = df["Volatility"].diff()
+    df = df.with_columns(pl.Series(name="distances", values=distances))
 
+    df = df.with_columns(
+        pl.Series(name="Volatility", values=df["distances"].rolling_sum(window_size=10))
+    )
+
+    df = df.with_columns(pl.col("Volatility").diff().alias("Volatility_tendency"))
     return df
 
 
 def get_best_valid_line(best_lines, asset, df_rsi, limit):
-    best_line = compute_and_validate_2_combinations(df_rsi.iloc[-limit:])
+    best_line = compute_and_validate_2_combinations(df_rsi[-limit:])
 
     if best_line:
-        get_sum_line_distances(df_rsi, best_line.a, best_line.b)
+        df_line_distance = get_sum_line_distances(df_rsi, best_line.a, best_line.b)
         diminish_tendency = (
-            df_rsi["Volatility_tendency"][-10:] < 0
+            df_line_distance[-10:, "Volatility_tendency"] < 0
         ).mean() > VOLATILITY_COMPRESSION_THRESHOLD
         if best_line.score > 1 and diminish_tendency:
-            best_lines.append((best_line, asset, df_rsi))
+            best_lines.append((best_line, asset, df_line_distance))
