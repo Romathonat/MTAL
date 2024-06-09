@@ -9,11 +9,11 @@ from ta.volatility import AverageTrueRange, BollingerBands, KeltnerChannel
 
 from src.mtal.utils import get_ma_names
 
-THRESHOLD_CROSS = 1
+THRESHOLD_CROSS = 3
 NB_LAST_POINT_AUTHORIZED = 3
 NB_PREVIOUS_POINT_NO_CROSS = 0
-MAX_SLOPE_POSITIVE = 0.10
-MIN_SLOPE_NEGATIVE = -0.50
+MAX_SLOPE_POSITIVE = 0.30
+MIN_SLOPE_NEGATIVE = -0.90
 HISTORY_LIMIT = 200
 MINIMAL_SPACE_LINE_POINTS = 2
 VOLATILITY_COMPRESSION_HISTORY = 10
@@ -230,7 +230,6 @@ def is_valid_magic_line(x_1, x_2, y_1, y_2, df_rsi, limit=30) -> Line:
                 return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
             else:
                 return Line(x_1=x_1, x_2=x_2, y_1=y_1, y_2=y_2, a=a, score=points, b=b)
-
         if (
             abs(a * x - y + b) / np.sqrt(a**2 + 1) <= THRESHOLD_CROSS
             and not previous_touching_point
@@ -239,6 +238,7 @@ def is_valid_magic_line(x_1, x_2, y_1, y_2, df_rsi, limit=30) -> Line:
             previous_touching_point = True
         else:
             previous_touching_point = False
+
     return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
 
 
@@ -333,12 +333,12 @@ def get_best_valid_line(best_lines, asset, df_rsi, limit):
     if best_line:
         df_line_distance = get_sum_line_distances(df_rsi, best_line.a, best_line.b)
 
-        print(df_line_distance[-10:])
+        # diminish_tendency = (
+        #     df_line_distance[-10:, "Volatility_tendency"] < 0
+        # ).mean() < VOLATILITY_COMPRESSION_THRESHOLD
 
-        diminish_tendency = (
-            df_line_distance[-10:, "Volatility_tendency"] < 0
-        ).mean() < VOLATILITY_COMPRESSION_THRESHOLD
-        # ).mean() < 0.5
-
-        if best_line.score > 1 and diminish_tendency:
+        # if best_line.score > 1 and diminish_tendency:
+        if best_line.score > 1:
             best_lines.append((best_line, asset, df_line_distance))
+            return True
+    return False
