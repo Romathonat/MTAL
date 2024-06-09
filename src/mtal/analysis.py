@@ -17,7 +17,7 @@ MIN_SLOPE_NEGATIVE = -0.50
 HISTORY_LIMIT = 200
 MINIMAL_SPACE_LINE_POINTS = 2
 VOLATILITY_COMPRESSION_HISTORY = 10
-VOLATILITY_COMPRESSION_THRESHOLD = 0.5
+VOLATILITY_COMPRESSION_THRESHOLD = 1
 
 
 @dataclass
@@ -204,28 +204,28 @@ def compute_line(x_1, x_2, y_1, y_2):
 
 
 def is_valid_magic_line(x_1, x_2, y_1, y_2, df_rsi, limit=30) -> Line:
-    print(x_1, x_2, y_1, y_2)
     a, b = compute_line(x_1, x_2, y_1, y_2)
     if a > MAX_SLOPE_POSITIVE or a < MIN_SLOPE_NEGATIVE:
         return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
 
     start_point = max(x_1 - NB_PREVIOUS_POINT_NO_CROSS, 0)
-    total_points = len(df_rsi.filter(pl.col("index") >= start_point))
+    df = df_rsi.filter(pl.col("index") >= start_point)
+    total_points = len(df)
 
     points = 0
     previous_touching_point = False
 
     for i, (x, y) in enumerate(
         zip(
-            df_rsi.filter(pl.col("index") >= start_point)["index"],
-            df_rsi.filter(pl.col("index") >= start_point)["RSI"],
+            df["index"],
+            df["RSI"],
         )
     ):
         position_from_end = total_points - i - 0
         if y > a * x + b + THRESHOLD_CROSS:
             if (
                 position_from_end > NB_LAST_POINT_AUTHORIZED
-                # or df_rsi[x, "Close"] < df_rsi[x, "ema5"]
+                or df[i, "Close"] < df[i, "ema5"]
             ):
                 return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
             else:
@@ -239,7 +239,6 @@ def is_valid_magic_line(x_1, x_2, y_1, y_2, df_rsi, limit=30) -> Line:
             previous_touching_point = True
         else:
             previous_touching_point = False
-    print("coucou")
     return Line(x_1=0, x_2=0, y_1=0, y_2=0, a=0, score=0, b=0)
 
 
@@ -309,12 +308,14 @@ def compute_and_validate_2_combinations(df_rsi: pl.DataFrame, limit=100):
 
 
 def get_sum_line_distances(df, a, b):
-    y_line = a * df["index"] + b
-    is_below = df["RSI"] <= y_line
+    # y_line = a * df["index"] + b
+    # # is_below = df["RSI"] <= y_line
 
-    distances = np.where(
-        is_below, abs(a * df["index"] - df["RSI"] + b) / np.sqrt(a**2 + 1), 0
-    )
+    # # distances = np.where(
+    # #     is_below, abs(a * df["index"] - df["RSI"] + b) / np.sqrt(a**2 + 1), 0
+    # # )
+
+    distances = abs(a * df["index"] - df["RSI"] + b) / np.sqrt(a**2 + 1)
 
     df = df.with_columns(pl.Series(name="distances", values=distances))
 
@@ -331,8 +332,13 @@ def get_best_valid_line(best_lines, asset, df_rsi, limit):
 
     if best_line:
         df_line_distance = get_sum_line_distances(df_rsi, best_line.a, best_line.b)
+
+        print(df_line_distance[-10:])
+
         diminish_tendency = (
             df_line_distance[-10:, "Volatility_tendency"] < 0
-        ).mean() > VOLATILITY_COMPRESSION_THRESHOLD
+        ).mean() < VOLATILITY_COMPRESSION_THRESHOLD
+        # ).mean() < 0.5
+
         if best_line.score > 1 and diminish_tendency:
             best_lines.append((best_line, asset, df_line_distance))
