@@ -195,6 +195,7 @@ def display_strategy_results(df: pd.DataFrame, results: BacktestResults):
     print(f"Max drawdown: {results.max_drawdown}")
     print(f"Trade number: {results.trade_number}")
     print(f"Excess return compared to B&H: {results.excess_return_vs_buy_and_hold}")
+    print(f"Kelly Criterion: {results.kelly_criterion}")
 
 
 def display_portfolio_value(results: BacktestPorfolioResults):

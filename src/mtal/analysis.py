@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 from ta.trend import WMAIndicator
+from ta.volatility import AverageTrueRange, BollingerBands, KeltnerChannel
 
 from src.mtal.utils import get_ma_names
 
@@ -116,6 +117,64 @@ def compute_hma(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
         for i in weighted_moving_average(df["data_hull"], int(np.sqrt(span)))
     ]
 
+    return pl.from_pandas(df)
+
+
+def compute_ehma(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
+    df = df_in.to_pandas()
+    ema_half = df["Close"].ewm(span=span // 2, adjust=False).mean()
+    ema_full = df["Close"].ewm(span=span, adjust=False).mean()
+    df["data_hull"] = 2 * ema_half - ema_full
+    df[get_ma_names(span, prefix="ehma")] = [
+        int(i) if not np.isnan(i) else 0
+        for i in weighted_moving_average(df["data_hull"], int(np.sqrt(span)))
+    ]
+    return pl.from_pandas(df)
+
+
+def compute_atr(df_in: pl.DataFrame, span=14):
+    df = df_in.to_pandas()
+    df["ATR"] = AverageTrueRange(
+        df["High"], df["Low"], df["Close"], window=span
+    ).average_true_range()
+    return pl.from_pandas(df)
+
+
+def compute_keltner_low(df_in: pl.DataFrame, span=20, window_ATR=3):
+    df = df_in.to_pandas()
+    df["keltner_low"] = KeltnerChannel(
+        df["High"],
+        df["Low"],
+        df["Close"],
+        window=span,
+        window_atr=window_ATR,
+        original_version=False,
+    ).keltner_channel_lband()
+
+    return pl.from_pandas(df)
+
+
+def compute_keltner_high(df_in: pl.DataFrame, span=20, window_ATR=3):
+    df = df_in.to_pandas()
+    df["keltner_high"] = KeltnerChannel(
+        df["High"],
+        df["Low"],
+        df["Close"],
+        window=span,
+        window_atr=window_ATR,
+        original_version=False,
+    ).keltner_channel_hband()
+
+    return pl.from_pandas(df)
+
+
+def compute_BB(df_in: pl.DataFrame, window: int = 20, window_dev=2):
+    df = df_in.to_pandas()
+    BB = BollingerBands(df["Close"], window=window, window_dev=window_dev)
+
+    df["BB_hband"] = BB.bollinger_hband()
+    df["BB_mid"] = BB.bollinger_mavg()
+    df["BB_lband"] = BB.bollinger_lband()
     return pl.from_pandas(df)
 
 

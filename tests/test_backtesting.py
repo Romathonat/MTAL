@@ -76,7 +76,7 @@ def test_ema_cross_backtester(sample_data: pl.DataFrame):
     assert results.normalized_pnl is not None
     assert len(results.value_history) == len(sample_data)
     assert len(results.b_n_h_history) == len(sample_data)
-    assert results.excess_return_vs_buy_and_hold == 0.1554843910959824
+    assert results.excess_return_vs_buy_and_hold == 0.1534843910959824
     assert results.kelly_criterion == 100
 
 
@@ -150,5 +150,5 @@ def test_ema_cross_backtester_kelly_criterion_2_trades(sample_data: pl.DataFrame
     assert results.normalized_pnl is not None
     assert len(results.value_history) == len(sample_data) * 2
     assert len(results.b_n_h_history) == len(sample_data) * 2
-    assert results.excess_return_vs_buy_and_hold == 0.19021549088817305
-    assert results.kelly_criterion == 16.067736185383204
+    assert results.excess_return_vs_buy_and_hold == 0.18382375357777508
+    assert results.kelly_criterion == 14.6552963242949

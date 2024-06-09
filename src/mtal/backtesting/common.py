@@ -27,7 +27,7 @@ class BacktestResults:
 
 class AbstractBacktest(ABC):
     def __init__(
-        self, data, params={}, cash=1000, cutoff_begin=None, cutoff_end=None
+        self, data, params={}, cash=1000, cutoff_begin=None, cutoff_end=None, fees=0.1
     ) -> None:
         self.data = data
         if cutoff_begin is None:
@@ -53,7 +53,7 @@ class AbstractBacktest(ABC):
         self.profit_history = []
         self.value_history = [cash, cash]
         self.b_n_h_history = [cash, cash]
-
+        self.fees = fees
         for key, value in params.items():
             setattr(self, key, value)
 
@@ -157,10 +157,6 @@ class AbstractBacktest(ABC):
         else:
             V = 0
 
-        print(V)
-        print(G)
-        print(win_rate)
-
         if G == 0:
             return 0
         elif V == 0:
@@ -177,11 +173,12 @@ class AbstractBacktest(ABC):
         self.exit_dates.append(current_df[-1, "Close Time"])
         self.exit_prices.append(current_df[-1, "Close"])
 
-        variation = self._get_variation()
-        self.profit_history.append(variation * self.current_bet)
-        self.current_bet, self.cash = 0, (1 + variation) * self.current_bet
+        variation_with_fees = self._get_variation() - 2 * self.fees / 100
 
-        self.profit_pct_history.append(variation)
+        self.profit_history.append(variation_with_fees * self.current_bet)
+        self.current_bet, self.cash = 0, (1 + variation_with_fees) * self.current_bet
+
+        self.profit_pct_history.append(variation_with_fees)
         self.cash_history.append(self.cash)
 
     def _get_variation(self):
