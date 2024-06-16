@@ -178,6 +178,40 @@ def compute_BB(df_in: pl.DataFrame, window: int = 20, window_dev=2):
     return pl.from_pandas(df)
 
 
+def compute_heikin_ashin(df_in: pl.DataFrame):
+    df = df_in.to_pandas()
+
+    heikin_ashi_df = pd.DataFrame(
+        index=df.index, columns=["Open", "High", "Low", "Close"]
+    )
+
+    heikin_ashi_df["Close"] = (df["Open"] + df["High"] + df["Low"] + df["Close"]) / 4.0
+    heikin_ashi_df["Open"] = (df["Open"].shift(1) + df["Close"].shift(1)) / 2.0
+    heikin_ashi_df["High"] = (
+        heikin_ashi_df[["Open", "Close"]].join(df["High"]).max(axis=1)
+    )
+    heikin_ashi_df["Low"] = (
+        heikin_ashi_df[["Open", "Close"]].join(df["Low"]).min(axis=1)
+    )
+
+    heikin_ashi_df.iloc[0]["Open"] = df.iloc[0]["Open"]
+    heikin_ashi_df.iloc[0]["Close"] = (
+        df.iloc[0]["Open"]
+        + df.iloc[0]["High"]
+        + df.iloc[0]["Low"]
+        + df.iloc[0]["Close"]
+    ) / 4.0
+    heikin_ashi_df.iloc[0]["High"] = df.iloc[0]["High"]
+    heikin_ashi_df.iloc[0]["Low"] = df.iloc[0]["Low"]
+
+    df["ha_Close"] = heikin_ashi_df["Close"]
+    df["ha_Open"] = heikin_ashi_df["Open"]
+    df["ha_High"] = heikin_ashi_df["High"]
+    df["ha_Low"] = heikin_ashi_df["Low"]
+
+    return pl.from_pandas(df)
+
+
 def compute_hma_on_rsi(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
     df = df_in.to_pandas()
     wma_half = weighted_moving_average(df["RSI"], span // 2)
