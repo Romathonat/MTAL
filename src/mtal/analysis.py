@@ -6,6 +6,7 @@ import pandas as pd
 import polars as pl
 from ta.trend import WMAIndicator
 from ta.volatility import AverageTrueRange, BollingerBands, KeltnerChannel
+from ta.volume import on_balance_volume
 
 from src.mtal.utils import get_ma_names
 
@@ -51,6 +52,76 @@ def compute_rsi(df: pl.DataFrame, window=14) -> pl.DataFrame:
     df_pd["Volume_MA"] = df_pd["Volume"].rolling(window=20).mean()
 
     return pl.from_pandas(df_pd)
+
+
+def compute_obv(df: pl.DataFrame) -> pl.DataFrame:
+    df_pd = df.to_pandas()
+
+    df_pd["OBV"] = on_balance_volume(df_pd["Close"], df_pd["Volume"])
+
+    return pl.from_pandas(df_pd)
+
+
+def compute_anchored_obv(df: pl.DataFrame, reset_period="1M"):
+    df_pd = df.to_pandas()
+
+    df_pd["Close Time"] = pd.to_datetime(df_pd["Close Time"])
+    df_pd.sort_values("Close Time", inplace=True)
+
+    # Créer un identifiant de période pour chaque groupe de réinitialisation
+    df_pd["Period"] = df_pd["Close Time"].dt.to_period(reset_period)
+
+    # Déterminer le début de chaque période de réinitialisation en fonction de l'année civile
+    if reset_period == "1M":
+        df_pd["Period"] = (
+            df_pd["Close Time"].dt.year.astype(str)
+            + "-"
+            + df_pd["Close Time"].dt.month.astype(str).str.zfill(2)
+        )
+    elif reset_period == "3M":
+        df_pd["Period"] = (
+            df_pd["Close Time"].dt.year.astype(str)
+            + "-"
+            + ((df_pd["Close Time"].dt.month - 1) // 3 + 1).astype(str).str.zfill(2)
+        )
+    elif reset_period == "6M":
+        df_pd["Period"] = (
+            df_pd["Close Time"].dt.year.astype(str)
+            + "-"
+            + ((df_pd["Close Time"].dt.month - 1) // 6 + 1).astype(str).str.zfill(2)
+        )
+    elif reset_period == "1Y":
+        df_pd["Close Time"].dt.year.astype(str)
+
+    df_pd["Anchored_OBV"] = 0
+
+    for period, period_data in df_pd.groupby("Period"):
+        change_vector = period_data["Close"].diff()
+        direction = [1 if change > 0 else -1 for change in change_vector]
+
+        period_obv = (direction * period_data["Volume"]).cumsum()
+        period_obv -= period_obv.iloc[0]
+
+        # Mise à jour de la colonne OBV dans les données principales
+        df_pd.loc[period_data.index, "Anchored_OBV"] = period_obv.astype(int)
+    df_pd.drop(columns=["Period"], inplace=True)
+
+    return pl.from_pandas(df_pd)
+
+
+def compute_hma_on_obv(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
+    df = df_in.to_pandas()
+
+    wma_half = weighted_moving_average(df["OBV"], span // 2)
+    wma_full = weighted_moving_average(df["OBV"], span)
+
+    df["data_hull"] = 2 * wma_half - wma_full
+    df[get_ma_names(span, prefix="hma", suffix="_on_OBV")] = [
+        int(i) if not np.isnan(i) else 0
+        for i in weighted_moving_average(df["data_hull"], int(np.sqrt(span)))
+    ]
+
+    return pl.from_pandas(df)
 
 
 def compute_vzo(df_in: pl.DataFrame, window=14) -> pl.DataFrame:
@@ -210,6 +281,39 @@ def compute_heikin_ashin(df_in: pl.DataFrame):
     df["ha_Low"] = heikin_ashi_df["Low"]
 
     return pl.from_pandas(df)
+
+
+def compute_renko(df: pl.DataFrame, span_atr: int, brick_size_factor: float):
+    df = compute_atr(df, span=span_atr)
+    df_pd = df.to_pandas()
+
+    prices = df_pd["Close"].tolist()
+
+    brick_sizes = df_pd["ATR"] * brick_size_factor
+
+    renko_directions = []  # +1 pour une brique montante, -1 pour une brique descendante
+    renko_prices = []
+
+    current_price = prices[0]
+    last_brick = current_price
+
+    for i, price in enumerate(prices):
+        brick_size = brick_sizes[i]
+        renko_direction = 0
+        if price >= last_brick + brick_size:
+            last_brick += brick_size
+            renko_direction = 1
+        elif price <= last_brick - brick_size:
+            last_brick -= brick_size
+            renko_direction = -1
+
+        renko_prices.append(last_brick)
+        renko_directions.append(renko_direction)
+
+    df_pd["Renko_Price"] = renko_prices
+    df_pd["Direction"] = renko_directions
+
+    return pl.from_pandas(df_pd)
 
 
 def compute_hma_on_rsi(df_in: pl.DataFrame, span=9) -> pl.DataFrame:

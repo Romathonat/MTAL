@@ -1,7 +1,13 @@
 import polars as pl
 from polars.testing import assert_series_equal
 
-from src.mtal.analysis import compute_ema, compute_hma, compute_rsi, compute_vzo
+from src.mtal.analysis import (
+    compute_anchored_obv,
+    compute_ema,
+    compute_hma,
+    compute_rsi,
+    compute_vzo,
+)
 from src.mtal.utils import get_ma_names
 
 
@@ -175,3 +181,34 @@ def test_compute_vzo():
     )
 
     assert_series_equal(df_vzo["VZO"], expected_serie, check_names=False)
+
+
+def test_compute_anchored_obv():
+    data = pl.DataFrame(
+        {
+            "Close Time": [
+                "2022-01-01",
+                "2022-01-15",
+                "2022-02-01",
+                "2022-02-15",
+                "2022-03-01",
+            ],
+            "Close": [100, 105, 103, 107, 110],
+            "Volume": [200, 300, 250, 350, 400],
+        }
+    )
+
+    result = compute_anchored_obv(data, "1M")
+
+    result_pd = result.to_pandas()
+
+    expected_obv_values = [
+        0,
+        300,
+        0,
+        350,
+        0,
+    ]
+    assert all(
+        result_pd["Anchored_OBV"] == expected_obv_values
+    ), "OBV values do not match expected values"

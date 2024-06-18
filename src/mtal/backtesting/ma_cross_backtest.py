@@ -71,6 +71,57 @@ class MACrossBacktester(AbstractBacktest):
         return False
 
 
+class MACrossLag(AbstractBacktest):
+    def __init__(
+        self,
+        data: pl.DataFrame,
+        long_ma=10,
+        gap=2,
+        cutoff_begin=None,
+        cutoff_end=None,
+    ):
+        super().__init__(
+            data,
+            cutoff_begin=cutoff_begin,
+            cutoff_end=cutoff_end,
+            params=self.extract_named_params(locals()),
+        )
+        self.ma_type = "hma"
+        self.data = compute_hma(self.data, long_ma)
+
+    def is_enter(self, df: DataFrame):
+        """
+        We enter at the current open if the previous ema is a cross
+        """
+        if len(df) < self.gap + 3:
+            return False
+        just_crossed = (
+            df[-1, get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+            > df[-1 - self.gap, get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        )
+        uncrossed_before = (
+            df[-2, get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+            <= df[-2 - self.gap, get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        )
+
+        if just_crossed and uncrossed_before:
+            return True
+        return False
+
+    def is_exit(self, df: DataFrame):
+        if len(df) < self.gap + 1:
+            return False
+
+        just_crossed = (
+            df[-1, get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+            < df[-1 - self.gap, get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
+        )
+
+        if just_crossed:
+            return True
+        return False
+
+
 class MACrossFakeBarBacktester(AbstractBacktest):
     def __init__(
         self,
@@ -115,7 +166,7 @@ class MACrossFakeBarBacktester(AbstractBacktest):
             df[-2, get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
             <= df[-2, get_ma_names(self.long_ma, prefix=self.ma_type)]  # type: ignore
         )
-        bar_ratio = df[-1, "Close"] - df[-1, "Open"] / df[-1, "Volume"]
+        bar_ratio = df[-1, "Volume"] / (df["Close"] - df["Open"])
 
         if just_crossed and uncrossed_before and bar_ratio > self.bar_ratio:
             return True
