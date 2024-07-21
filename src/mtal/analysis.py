@@ -109,6 +109,32 @@ def compute_anchored_obv(df: pl.DataFrame, reset_period="1M"):
     return pl.from_pandas(df_pd)
 
 
+def compute_vaa_momentum(df: pl.DataFrame):
+    df_pd = df.to_pandas()
+
+    # Convertir les dates en datetime et trier
+    df_pd["Close Time"] = pd.to_datetime(df_pd["Close Time"])
+    df_pd.sort_values("Close Time", inplace=True)
+
+    # Calculer le momentum pour 1, 3, 6 et 12 mois
+    def calculate_momentum(shift_months):
+        shift_weeks = 4 * shift_months
+        past_prices = df_pd["Close"].shift(periods=shift_weeks)
+        momentum = df_pd["Close"] - past_prices
+        return momentum.fillna(0)
+
+    # Périodes de momentum correspondant à 1M, 3M, 6M et 12M (en supposant 21 jours ouvrables par mois)
+    m1 = calculate_momentum(1)
+    m3 = calculate_momentum(3)
+    m6 = calculate_momentum(6)
+    m12 = calculate_momentum(12)
+
+    # Calcul du VAA Momentum
+    df_pd["VAA_Momentum"] = (12 * m1 + 4 * m3 + 2 * m6 + m12) / 19
+
+    return pl.from_pandas(df_pd)
+
+
 def compute_hma_on_obv(df_in: pl.DataFrame, span=9) -> pl.DataFrame:
     df = df_in.to_pandas()
 

@@ -72,8 +72,6 @@ def test_backtesting_portfolio(
     results = PortfolioRebalance(assets, weights, freq="M").run()
     assert results.pnl == 1333.3333333333335
     assert len(results.value_history) == len(results.date_history)
-    print(sample_data_1["Date"])
-    print(results.date_history)
     assert len(results.date_history) == 5
 
 

@@ -8,12 +8,10 @@ from src.mtal.backtesting.portfolio.rebalance import BacktestPorfolioResults
 
 
 def plot_rsi(df_rsi, limit=30):
-    # Calcul de la moyenne mobile sur 14 périodes pour le volume
     df_rsi["Volume_MA14"] = df_rsi["Volume"].rolling(window=14).mean()
 
     fig, ax = plt.subplots(figsize=(15, 6))
 
-    # Tracé du RSI
     ax.plot(
         df_rsi.iloc[-limit:]["Close Time"],
         df_rsi.iloc[-limit:]["RSI"],
@@ -23,13 +21,11 @@ def plot_rsi(df_rsi, limit=30):
     ax.axhline(70, linestyle="--", alpha=0.5, color="red")
     ax.axhline(30, linestyle="--", alpha=0.5, color="green")
 
-    # Mise à l'échelle des volumes pour l'affichage
     base_line = 0
     scaled_volume = (
         df_rsi.iloc[-limit:]["Volume"] / df_rsi.iloc[-limit:]["Volume"].max()
-    ) * (70 * 0.3)  # Ajustement pour l'affichage
+    ) * (70 * 0.3)
 
-    # Tracé des volumes
     ax.bar(
         df_rsi.iloc[-limit:]["Close Time"],
         scaled_volume,
@@ -39,12 +35,10 @@ def plot_rsi(df_rsi, limit=30):
         alpha=0.8,
     )
 
-    # Mise à l'échelle de la moyenne mobile du volume pour l'affichage
     scaled_volume_MA = (
         df_rsi.iloc[-limit:]["Volume_MA14"] / df_rsi.iloc[-limit:]["Volume"].max()
     ) * (70 * 0.3)
 
-    # Tracé de la moyenne mobile du volume
     ax.plot(
         df_rsi.iloc[-limit:]["Close Time"],
         scaled_volume_MA + base_line,
@@ -53,7 +47,6 @@ def plot_rsi(df_rsi, limit=30):
         linewidth=1,
     )
 
-    # Configuration du graphique
     ax.set_title("RSI sur 14 périodes et Volume avec Volume MA14")
     ax.set_xlabel("Date")
     ax.set_ylabel("RSI")
@@ -81,7 +74,6 @@ def draw_line(a, b, start_point, max_size):
 def plot_rsi_with_line(x_1, x_2, y_1, y_2, df_rsi, limit=100):
     fig, ax = plt.subplots(figsize=(15, 6))
 
-    # Tracé du RSI
     ax.plot(
         df_rsi[-limit:, "index"],
         df_rsi[-limit:, "RSI"],
@@ -91,13 +83,11 @@ def plot_rsi_with_line(x_1, x_2, y_1, y_2, df_rsi, limit=100):
     ax.axhline(70, linestyle="--", alpha=0.5, color="red")
     ax.axhline(30, linestyle="--", alpha=0.5, color="green")
 
-    # Mise à l'échelle des volumes pour l'affichage
     base_line = 0
     scaled_volume = (df_rsi[-limit:, "Volume"] / df_rsi[-limit:, "Volume"].max()) * (
         70 * 0.3
-    )  # Ajustement pour l'affichage
+    )
 
-    # Tracé des volumes
     ax.bar(
         df_rsi[-limit:, "index"],
         scaled_volume,
@@ -107,12 +97,10 @@ def plot_rsi_with_line(x_1, x_2, y_1, y_2, df_rsi, limit=100):
         alpha=0.8,
     )
 
-    # Mise à l'échelle de la moyenne mobile du volume pour l'affichage
     scaled_volume_MA = (
         df_rsi[-limit:, "Volume_MA"] / df_rsi[-limit:, "Volume"].max()
     ) * (70 * 0.3)
 
-    # Tracé de la moyenne mobile du volume
     ax.plot(
         df_rsi[-limit:, "index"],
         scaled_volume_MA + base_line,
@@ -121,7 +109,6 @@ def plot_rsi_with_line(x_1, x_2, y_1, y_2, df_rsi, limit=100):
         linewidth=1,
     )
 
-    # Configuration du graphique
     ax.set_title("RSI sur 14 périodes et Volume avec Volume MA14")
     ax.set_xlabel("Date")
     ax.set_ylabel("RSI")
@@ -171,21 +158,21 @@ def display_crypto(best_lines, limit):
 
 
 def display_strat_value_over_time(df: pd.DataFrame, results: BacktestResults):
-    plt.figure(figsize=(10, 5))  # Taille de la figure
-    plt.plot(df["Close Time"], results.value_history, label="Valeur du Portefeuille")
+    plt.figure(figsize=(10, 5))
+    plt.plot(df["Close Time"], results.value_history, label="Portfolio Value")
     plt.plot(
         df["Close Time"],
         results.b_n_h_history,
         label="Benchmark Buy & Hold",
         color="orange",
     )
-    plt.title("Évolution de la Valeur du Portefeuille")  # Titre du graphique
-    plt.xlabel("Date")  # Étiquette de l'axe des x
-    plt.ylabel("Valeur")  # Étiquette de l'axe des y
-    plt.legend()  # Ajouter une légende
-    plt.grid(True)  # Ajouter une grille pour faciliter la lecture
-    plt.tight_layout()  # Ajuster automatiquement les paramètres de la figure
-    plt.show()  # Afficher le graphique
+    plt.title("Portfolio Value Evolution")
+    plt.xlabel("Date")
+    plt.ylabel("Value")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
 
 def display_strategy_results(df: pd.DataFrame, results: BacktestResults):
@@ -203,10 +190,10 @@ def display_portfolio_value(results: BacktestPorfolioResults):
     plt.plot(
         results.date_history, results.value_history, label="Valeur du Portefeuille"
     )
-    plt.title("Évolution de la Valeur du Portefeuille")  # Titre du graphique
-    plt.xlabel("Date")  # Étiquette de l'axe des x
-    plt.ylabel("Valeur")  # Étiquette de l'axe des y
-    plt.legend()  # Ajouter une légende
-    plt.grid(True)  # Ajouter une grille pour faciliter la lecture
-    plt.tight_layout()  # Ajuster automatiquement les paramètres de la figure
-    plt.show()  # Afficher le graphique
+    plt.title("Portfolio Value Evolution")
+    plt.xlabel("Date")
+    plt.ylabel("Value")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()

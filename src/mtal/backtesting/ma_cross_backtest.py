@@ -247,14 +247,10 @@ class MACrossAlphaBacktester(AbstractBacktest):
         just_crossed = (
             df[-1, get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
             < df[-1, get_ma_names(self.long_ma, prefix=self.ma_type)]
-            * (1 + self.alpha / 100)  # type: ignore
+            * (1 - self.alpha / 100)  # type: ignore
         )
-        uncrossed_before = (
-            df[-2, get_ma_names(self.short_ma, prefix=self.ma_type)]  # type: ignore
-            >= df[-2, get_ma_names(self.long_ma, prefix=self.ma_type)]
-            * (1 + self.alpha / 100)  # type: ignore
-        )
-        if just_crossed and uncrossed_before:
+
+        if just_crossed:
             return True
         return False
 

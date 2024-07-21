@@ -16,7 +16,7 @@ MARKET_SHORTNAME = {
     "Euronext Paris, Amsterdam": "PA",
 }
 
-API_STOCKS_TOKEN = "6614351c645f34.55152589"
+API_STOCKS_TOKEN = "<TODO>"
 
 
 def get_spot_pairs():

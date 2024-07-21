@@ -129,6 +129,8 @@ class ANCHORED_OBV(AbstractBacktest):
         self,
         data,
         reset_period="3M",
+        trigger_point_enter=0,
+        trigger_point_exit=0,
         cutoff_begin=None,
         cutoff_end=None,
     ):
@@ -147,7 +149,10 @@ class ANCHORED_OBV(AbstractBacktest):
         """
         if len(df) < 3:
             return False
-        if df[-1, "Anchored_OBV"] > 0 and df[-2, "Anchored_OBV"] <= 0:
+        if (
+            df[-1, "Anchored_OBV"] > self.trigger_point_enter
+            and df[-2, "Anchored_OBV"] <= 0
+        ):
             return True
         return False
 
@@ -158,7 +163,7 @@ class ANCHORED_OBV(AbstractBacktest):
         if len(df) < 3:
             return False
 
-        if df[-1, "Anchored_OBV"] < 0:
+        if df[-1, "Anchored_OBV"] < self.trigger_point_exit:
             return True
 
         return False
