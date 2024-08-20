@@ -1,3 +1,6 @@
+import time
+from datetime import datetime
+
 import polars as pl
 from binance.spot import Spot
 
@@ -19,18 +22,39 @@ MARKET_SHORTNAME = {
 API_STOCKS_TOKEN = "<TODO>"
 
 
-def get_spot_pairs():
+def get_spot_pairs(only_vs_btc=False):
     infos = client.list_all_convert_pairs()
 
     cryptos = {}
 
     for info in infos:
-        if info["toAsset"] in AUTHORIZED_PAIRS:
+        if only_vs_btc and info["toAsset"] == "BTC":
             cryptos[info["fromAsset"]] = info["toAsset"]
+        elif info["toAsset"] in AUTHORIZED_PAIRS:
+            cryptos[info["fromAsset"]] = info["toAsset"]
+
     return [f"{key}{value}" for key, value in cryptos.items()]
 
 
-def get_pair_df(pair="BTCUSDT", limit=400, frequency="1w"):
+def date_to_ms_timestamp(date_str):
+    try:
+        date_obj = datetime.strptime(date_str, "%d/%m/%y")
+        timestamp_s = time.mktime(date_obj.timetuple())
+        timestamp_ms = int(timestamp_s * 1000)
+
+        return timestamp_ms
+    except ValueError as e:
+        print(f"Erreur: {e}. Assurez-vous que la date est au format 'jj/mm/aa'.")
+    return None
+
+
+def get_pair_df(
+    pair="BTCUSDT",
+    limit=400,
+    start_time="20/01/18",
+    end_time="20/01/25",
+    frequency="1w",
+):
     columns = [
         "Open Time",
         "Open",
@@ -45,15 +69,22 @@ def get_pair_df(pair="BTCUSDT", limit=400, frequency="1w"):
         "Taker Buy Quote Asset Volume",
         "Ignore",
     ]
+
     try:
         df = pl.DataFrame(
-            data=client.klines(pair, interval=frequency, limit=limit),
+            data=client.klines(
+                pair,
+                interval=frequency,
+                limit=limit,
+                startTime=date_to_ms_timestamp(start_time),
+                endTime=date_to_ms_timestamp(end_time),
+            ),
         )
+
         df.columns = columns
 
     except Exception:
-        out = pl.DataFrame()
-        out.columns = columns
+        out = pl.DataFrame(schema=[(col, pl.Float64) for col in columns])
         return out
 
     df = df[:, 0:7]
@@ -67,7 +98,7 @@ def get_pair_df(pair="BTCUSDT", limit=400, frequency="1w"):
         df["Close"].cast(pl.Float64),
         df["Volume"].cast(pl.Float64),
     )
-
+    print(pair)
     return df
 
 

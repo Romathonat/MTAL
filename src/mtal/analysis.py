@@ -472,13 +472,6 @@ def compute_and_validate_2_combinations(df_rsi: pl.DataFrame, limit=100):
 
 
 def get_sum_line_distances(df, a, b):
-    # y_line = a * df["index"] + b
-    # # is_below = df["RSI"] <= y_line
-
-    # # distances = np.where(
-    # #     is_below, abs(a * df["index"] - df["RSI"] + b) / np.sqrt(a**2 + 1), 0
-    # # )
-
     distances = abs(a * df["index"] - df["RSI"] + b) / np.sqrt(a**2 + 1)
 
     df = df.with_columns(pl.Series(name="distances", values=distances))

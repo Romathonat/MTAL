@@ -1,3 +1,5 @@
+import time
+
 from src.mtal.analysis import HISTORY_LIMIT, compute_rsi, get_best_valid_line
 from src.mtal.data_collect import (
     get_pair_df,
@@ -7,18 +9,25 @@ from src.mtal.data_collect import (
 )
 from src.mtal.dataviz import display_crypto, display_stock
 
-CRYPTO_NUMBER = 500
+CRYPTO_NUMBER = 100
 STOCK_NUMBER = 600
 
 
-def screen_best_asset(limit=100):
+def screen_best_asset(limit=100, start_time="20/01/18", end_time="20/01/25"):
     pairs = get_spot_pairs()
     best_lines = list()
 
     for pair in pairs[:CRYPTO_NUMBER]:
-        df = get_pair_df(pair=pair, limit=HISTORY_LIMIT, frequency="1w")
+        df = get_pair_df(
+            pair=pair,
+            limit=HISTORY_LIMIT,
+            frequency="1w",
+            start_time=start_time,
+            end_time=end_time,
+        )
         df_rsi = compute_rsi(df)
-        get_best_valid_line(best_lines, pair, df_rsi, limit)
+        df_with_index = df_rsi.with_row_index()
+        get_best_valid_line(best_lines, pair, df_with_index, limit)
 
     best_lines.sort(key=lambda x: x[0].score, reverse=True)
     display_crypto(best_lines, limit)
