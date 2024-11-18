@@ -13,15 +13,17 @@ CRYPTO_NUMBER = 100
 STOCK_NUMBER = 600
 
 
-def screen_best_asset(limit=100, start_time="20/01/18", end_time="20/01/25"):
-    pairs = get_spot_pairs()
+def screen_best_asset(
+    limit=100, start_time="20/01/18", end_time="20/01/25", only_vs_btc=False, frequency="1w"
+):
+    pairs = get_spot_pairs(only_vs_btc=only_vs_btc)
     best_lines = list()
 
     for pair in pairs[:CRYPTO_NUMBER]:
         df = get_pair_df(
             pair=pair,
             limit=HISTORY_LIMIT,
-            frequency="1w",
+            frequency=frequency,
             start_time=start_time,
             end_time=end_time,
         )

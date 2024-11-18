@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from src.mtal.analysis import compute_line
 from src.mtal.backtesting.common import BacktestResults
@@ -196,4 +197,45 @@ def display_portfolio_value(results: BacktestPorfolioResults):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    plt.show()
+
+
+def plot_price_history(df: pl.DataFrame, limit: int = 100):
+    """
+    Affiche le graphique des prix avec les chandeliers japonais et le volume
+    Pour un DataFrame Polars
+    
+    Args:
+        df: DataFrame Polars contenant les colonnes Open, High, Low, Close, Volume
+        limit: Nombre de périodes à afficher
+    """
+    # Conversion des dernières lignes en pandas pour le plotting
+    df_plot = df.tail(limit).to_pandas()
+    
+    # Création de la figure avec deux sous-graphiques
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 8), height_ratios=[3, 1], gridspec_kw={'hspace': 0.3})
+    
+    # Calcul des couleurs
+    colors = ['red' if close < open else 'green' 
+              for close, open in zip(df_plot['Close'], df_plot['Open'])]
+    
+    # Graphique des chandeliers
+    ax1.vlines(range(len(df_plot)), df_plot['Low'], df_plot['High'], color=colors)
+    ax1.vlines(range(len(df_plot)), df_plot['Open'], df_plot['Close'], 
+              color=colors, linewidth=4)
+    
+    # Configuration du graphique des prix
+    ax1.set_title('Prix et Volume')
+    ax1.set_ylabel('Prix')
+    ax1.grid(True, alpha=0.3)
+    
+    # Graphique du volume
+    ax2.bar(range(len(df_plot)), df_plot['Volume'], color=colors, alpha=0.7)
+    ax2.set_ylabel('Volume')
+    ax2.grid(True, alpha=0.3)
+    
+    # Configuration des dates en x
+    dates = df_plot['Open Time'].dt.strftime('%Y-%m-%d')
+    plt.xticks(range(len(df_plot)), dates.to_list(), rotation=45)
+    
     plt.show()

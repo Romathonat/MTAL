@@ -24,13 +24,12 @@ API_STOCKS_TOKEN = "<TODO>"
 
 def get_spot_pairs(only_vs_btc=False):
     infos = client.list_all_convert_pairs()
-
     cryptos = {}
 
     for info in infos:
         if only_vs_btc and info["toAsset"] == "BTC":
             cryptos[info["fromAsset"]] = info["toAsset"]
-        elif info["toAsset"] in AUTHORIZED_PAIRS:
+        elif not only_vs_btc and info["toAsset"] == "USDT":
             cryptos[info["fromAsset"]] = info["toAsset"]
 
     return [f"{key}{value}" for key, value in cryptos.items()]
@@ -98,7 +97,6 @@ def get_pair_df(
         df["Close"].cast(pl.Float64),
         df["Volume"].cast(pl.Float64),
     )
-    print(pair)
     return df
 
 
