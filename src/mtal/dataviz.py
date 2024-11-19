@@ -200,13 +200,15 @@ def display_portfolio_value(results: BacktestPorfolioResults):
     plt.show()
 
 
-def plot_price_history(df: pl.DataFrame, limit: int = 100):
+def plot_price_history(df: pl.DataFrame, price: float = None, start_idx: int = None, end_idx: int = None, limit: int = 100):
     """
-    Affiche le graphique des prix avec les chandeliers japonais et le volume
-    Pour un DataFrame Polars
+    Affiche le graphique des prix avec les chandeliers japonais, le volume et une ligne de prix optionnelle
     
     Args:
         df: DataFrame Polars contenant les colonnes Open, High, Low, Close, Volume
+        price: Prix pour la ligne horizontale
+        start_idx: Indice de début pour la ligne
+        end_idx: Indice de fin pour la ligne
         limit: Nombre de périodes à afficher
     """
     # Conversion des dernières lignes en pandas pour le plotting
@@ -236,6 +238,20 @@ def plot_price_history(df: pl.DataFrame, limit: int = 100):
     
     # Configuration des dates en x
     dates = df_plot['Open Time'].dt.strftime('%Y-%m-%d')
-    plt.xticks(range(len(df_plot)), dates.to_list(), rotation=45)
+    plt.xticks(range(len(df_plot)), dates.to_list(), rotation=90)
+    
+    if price is not None and start_idx is not None and end_idx is not None:
+        # Vérifier que les indices sont dans les limites
+        start_idx = max(0, start_idx)
+        end_idx = min(len(df_plot) - 1, end_idx)
+        
+        # Tracer la ligne horizontale bleue
+        ax1.hlines(y=price, 
+                  xmin=start_idx, 
+                  xmax=end_idx, 
+                  colors='blue', 
+                  linestyles='--', 
+                  label=f'Prix: {price}')
+        ax1.legend()
     
     plt.show()
