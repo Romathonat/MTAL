@@ -12,6 +12,8 @@ from src.mtal.dataviz import display_crypto
 
 CRYPTO_NUMBER = 200
 HISTORY_LIMIT = 200
+TOO_OLD_THRESHOLD = 10
+
 
 def screen_best_asset(
     limit=100, start_time="20/01/18", end_time="20/01/25", frequency="1d"
@@ -30,57 +32,140 @@ def screen_best_asset(
 
     display_crypto(best_lines, limit)
 
+
+TOLERANCE_THRESHOLD = 0.03
+
 def detect_tasse_hanse(df: pl.DataFrame):
-    # On cherche d'abord les points hauts locaux
     df = df.with_columns([
-        pl.col("high").rolling_max(window_size=3).alias("local_high")
+        pl.col("Close").rolling_max(window_size=10).alias("local_high")
     ])
     
-    # On identifie les points qui touchent la résistance (avec une tolérance de 1%)
-    resistance_level = df["local_high"].max()
-    tolerance = resistance_level * 0.01
+    potential_setups = []
+    top_levels = df["local_high"].unique().sort(descending=True).head(20)[1:]
     
-    # Trouver les points de contact avec la résistance
-    touches = df.filter(
-        (pl.col("high") >= resistance_level - tolerance)
-    ).select("timestamp", "high", "volume")
-    
-    if len(touches) < 3:
-        return False
+    for resistance_level in top_levels:
+        # Point pivot (fin de la tasse)
+        pivot_idx = df.filter(
+            pl.col("Close") == resistance_level
+        )[0, "Close Time"]
+        tolerance = resistance_level * TOLERANCE_THRESHOLD
         
-    # Vérifier que les touches sont de plus en plus proches de la résistance
-    touches = touches.sort("timestamp")
-    highs = touches["high"].to_list()
-    if not all(abs(highs[i] - resistance_level) >= abs(highs[i+1] - resistance_level) 
-              for i in range(len(highs)-1)):
-        return False
-    
-    # Vérifier la condition de la tasse plus grande que la hanse
-    pivot_idx = touches["timestamp"].to_list()[-1]
-    tasse_length = (pivot_idx - touches["timestamp"].to_list()[0])
-    
-    # Chercher le breakout après le pivot
-    breakout_df = df.filter(pl.col("timestamp") > pivot_idx)
-    if len(breakout_df) == 0:
-        return False
+        potential_touches = df.filter(
+            ((pl.col("Close") >= resistance_level - tolerance) &
+            (pl.col("Close") <= resistance_level + tolerance)) |
+            ((pl.col("High") >= resistance_level - tolerance) &
+            (pl.col("High") <= resistance_level + tolerance))
+        ).select("Close Time", "Close", "Volume", "idx")
+
+        # If we have one close above the resistance, we remove all the touches before this close time
+        for row in df.sort("Close Time", descending=True).iter_rows(named=True):
+            if row["Close"] > resistance_level + tolerance and row["Close Time"] < pivot_idx:
+                # Filtrer les touches pour ne garder que celles après cette barre
+                potential_touches = potential_touches.filter(pl.col("Close Time") > row["Close Time"])
+                
+                # Ajouter cette barre comme premier touch
+                new_touch = pl.DataFrame({
+                    "Close Time": [row["Close Time"]],
+                    "Close": [row["Close"]],
+                    "Volume": [row["Volume"]],
+                    "idx": [row["idx"]]
+                    },
+                    schema={
+                        "Close Time": pl.Datetime("ms"),
+                        "Close": pl.Float64,
+                        "Volume": pl.Float64,
+                        "idx": pl.Int64
+                    }
+                )
+                potential_touches = pl.concat([new_touch, potential_touches])
+                break
+
+        last_touch_idx = None
+        BARS_BETWEEN_TOUCHES = 3  # Nombre de barres minimum entre chaque touche
+
+        filtered_touches = []
+        for row in potential_touches.iter_rows(named=True):
+            if last_touch_idx is None or (row["idx"] - last_touch_idx) > BARS_BETWEEN_TOUCHES:
+                filtered_touches.append(row)
+                last_touch_idx = row["idx"]
+
+        touches = pl.DataFrame(filtered_touches)
+                    
+
+        if len(touches) < 2:
+            continue
+            
+        first_touch_idx = df.filter(pl.col("Close Time") == touches[0, "Close Time"])["idx"].item()
+        first_touch_price = touches[0, "Close"]
+
+        # Calculer la moyenne des prix avant le premier touch
+        pre_touch_avg = df.filter(
+            pl.col("idx") < first_touch_idx
+        )["Close"].mean()
+
+        # Vérifier que la moyenne précédente est inférieure au premier touch
+        if pre_touch_avg >= first_touch_price:
+            continue
+
+        # Données de la tasse (avant le pivot)
+        cup_data = df.filter(
+            (pl.col("Close Time") >= touches[0, "Close Time"]) &
+            (pl.col("Close Time") <= pivot_idx)
+        )
+        max_cup_distance = abs(resistance_level - cup_data["Close"].min())
         
-    breakout_point = breakout_df.filter(
-        pl.col("high") > resistance_level + tolerance
-    ).first()
-    
-    if breakout_point is None:
-        return False
+        # Données de la hanse (après le pivot)
+        handle_data = df.filter(pl.col("Close Time") > pivot_idx)
+        if len(handle_data) == 0:
+            continue
+            
+
+        breakout_point = handle_data.filter(
+            pl.col("Close") > resistance_level + tolerance
+        )[0]
         
-    hanse_length = breakout_point["timestamp"] - pivot_idx
-    
-    # Vérifier que la tasse est plus longue que la hanse
-    if tasse_length <= hanse_length:
-        return False
+            
+        handle_distance = abs(resistance_level - handle_data["Close"].min())
         
-    # Vérifier le volume au breakout
-    avg_volume = df["volume"].mean()
-    if breakout_point["volume"] <= avg_volume:
+        # Vérifier que la distance max de la tasse est plus grande que celle de la hanse
+        if max_cup_distance * 1.2 <= handle_distance :
+            continue
+            
+        # Vérifier le volume au breakout
+        avg_volume = df["Volume"].mean()
+        
+        first_touch_idx = df.filter(pl.col("Close Time") == touches[0, "Close Time"])["idx"].item()
+        pivot_bar_idx = df.filter(pl.col("Close Time") == pivot_idx)["idx"].item()
+
+
+        tasse_length = pivot_bar_idx - first_touch_idx
+        if len(breakout_point) > 0:
+            breakout_volume_ratio = breakout_point[0, "Volume"] / avg_volume
+            if breakout_volume_ratio < 1:
+                continue
+            breakout_bar_idx = df.filter(pl.col("Close Time") == breakout_point[0, "Close Time"])["idx"].item()
+            hanse_length = breakout_bar_idx - pivot_bar_idx
+            end = breakout_bar_idx
+        else:
+            breakout_bar_idx = None
+            hanse_length = df[-1, "idx"] - pivot_bar_idx
+            breakout_volume_ratio = 0
+            end = df[-1, "idx"]
+        if tasse_length > hanse_length and hanse_length > 2 and df[-1, "idx"] - end < TOO_OLD_THRESHOLD:
+            potential_setups.append({
+                'resistance_level': resistance_level,
+                'setup_size': tasse_length + hanse_length,
+                'touches': len(touches),
+                'breakout_volume_ratio': breakout_volume_ratio,
+                'pivot': pivot_bar_idx,
+                'begin': first_touch_idx,
+                'end': end 
+            })
+    
+    if not potential_setups:
         return False
-    
-    return True
-    
+
+    best_setup = max(potential_setups, key=lambda x: x['resistance_level'])
+
+
+    return best_setup
