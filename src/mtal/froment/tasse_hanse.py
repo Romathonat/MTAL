@@ -1,6 +1,6 @@
 import polars as pl
 from src.mtal import CRYPTO_NUMBER
-from src.mtal.analysis import HISTORY_LIMIT
+from src.mtal.analysis import HISTORY_LIMIT, compute_BB
 from src.mtal.data_collect import (
     get_pair_df,
     get_spot_pairs,
@@ -83,7 +83,7 @@ def validate_pattern_metrics(df: pl.DataFrame, setup: dict) -> bool:
         df[-1, "idx"] - setup['end'] < TOO_OLD_THRESHOLD
     )
 
-def create_setup_dict(df: pl.DataFrame, touches: pl.DataFrame, resistance_level: float, pivot_idx: int) -> dict:
+def create_setup_dict_if_valid(df: pl.DataFrame, touches: pl.DataFrame, resistance_level: float, pivot_idx: int) -> dict:
     """
     Create a setup dictionary containing all relevant information about a potential cup and handle pattern
     
@@ -111,6 +111,8 @@ def create_setup_dict(df: pl.DataFrame, touches: pl.DataFrame, resistance_level:
     if len(handle_data) == 0:
         return None
 
+
+
     # Calculate breakout point and volume
     tolerance = resistance_level * TOLERANCE_THRESHOLD
     breakout_point = handle_data.filter(pl.col("Close") > resistance_level + tolerance)
@@ -122,6 +124,9 @@ def create_setup_dict(df: pl.DataFrame, touches: pl.DataFrame, resistance_level:
 
         breakout_volume_ratio = breakout_point[0, "Volume"] / avg_volume
         if breakout_volume_ratio < 1:
+            return None
+
+        if breakout_point[0, "Close"] < df[pivot_bar_idx, "BB_hband"]:
             return None
         end = df.filter(pl.col("Close Time") == breakout_point[0, "Close Time"])["idx"].item()
     else:
@@ -143,6 +148,8 @@ def detect_cup_handle(df: pl.DataFrame):
     df = df.with_columns([
         pl.col("Close").rolling_max(window_size=10).alias("local_high")
     ])
+
+    df = compute_BB(df)
     
     potential_setups = []
     top_levels = df["local_high"].unique().sort(descending=True).head(20)[1:]
@@ -157,7 +164,7 @@ def detect_cup_handle(df: pl.DataFrame):
         if len(touches) < 2:
             continue
             
-        setup = create_setup_dict(df, touches, resistance_level, pivot_idx)
+        setup = create_setup_dict_if_valid(df, touches, resistance_level, pivot_idx)
         if setup and validate_pattern_metrics(df, setup):
             potential_setups.append(setup)
     

@@ -226,10 +226,17 @@ def plot_price_history(df: pl.DataFrame, price: float = None, start_idx: int = N
     ax1.vlines(range(len(df_plot)), df_plot['Open'], df_plot['Close'], 
               color=colors, linewidth=4)
     
+    # Ajout des bandes de Bollinger
+    ax1.plot(range(len(df_plot)), df_plot['BB_hband'], 
+            color='gray', linestyle='--', alpha=0.7, label='Bollinger Supérieure')
+    ax1.plot(range(len(df_plot)), df_plot['BB_lband'], 
+            color='gray', linestyle='--', alpha=0.7, label='Bollinger Inférieure')
+    
     # Configuration du graphique des prix
-    ax1.set_title('Prix et Volume')
+    ax1.set_title('Prix, Volume et Bandes de Bollinger')
     ax1.set_ylabel('Prix')
     ax1.grid(True, alpha=0.3)
+    ax1.legend()
     
     # Graphique du volume
     ax2.bar(range(len(df_plot)), df_plot['Volume'], color=colors, alpha=0.7)
