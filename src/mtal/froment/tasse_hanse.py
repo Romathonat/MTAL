@@ -101,7 +101,7 @@ def create_setup_dict_if_valid(df: pl.DataFrame, touches: pl.DataFrame, resistan
 
     # Check if pre-touch average is lower than first touch
     pre_touch_avg = df.filter(pl.col("idx") < first_touch_idx)["Close"].mean()
-    if pre_touch_avg >= first_touch_price:
+    if not pre_touch_avg or pre_touch_avg >= first_touch_price:
         return None
 
     # Get pivot and handle data
@@ -110,8 +110,6 @@ def create_setup_dict_if_valid(df: pl.DataFrame, touches: pl.DataFrame, resistan
     
     if len(handle_data) == 0:
         return None
-
-
 
     # Calculate breakout point and volume
     tolerance = resistance_level * TOLERANCE_THRESHOLD
@@ -122,11 +120,14 @@ def create_setup_dict_if_valid(df: pl.DataFrame, touches: pl.DataFrame, resistan
         breakout_bar_idx = df.filter(pl.col("Close Time") == breakout_point[0, "Close Time"])["idx"].item()
         avg_volume = df[breakout_bar_idx-20:breakout_bar_idx, "Volume"].mean()
 
+        if not avg_volume:
+            return None
+
         breakout_volume_ratio = breakout_point[0, "Volume"] / avg_volume
         if breakout_volume_ratio < 1:
             return None
-
-        if breakout_point[0, "Close"] < df[pivot_bar_idx, "BB_hband"]:
+        
+        if not df[pivot_bar_idx, "BB_hband"] or breakout_point[0, "Close"] < df[pivot_bar_idx, "BB_hband"]:
             return None
         end = df.filter(pl.col("Close Time") == breakout_point[0, "Close Time"])["idx"].item()
     else:

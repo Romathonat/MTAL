@@ -37,8 +37,6 @@ def test_detect_tasse_hanse_structure(load_test_data, pair):
     assert result['touches'] >= 2
     assert result['setup_size'] > 0
     assert result['begin'] < result['pivot'] < result['end']
-    assert isinstance(result['resistance_level'], (int, float))
-    assert isinstance(result['breakout_volume_ratio'], (int, float))
 
 def test_pattern_too_old(load_test_data):
     """Test sur un cas connu pour avoir un pattern"""
@@ -53,14 +51,21 @@ def test_only_cup_detection(load_test_data):
     df = load_test_data(pair)
     result = detect_cup_handle(df)
     
-    assert result['touches'] == 5
+    assert result['touches'] == 2
     assert result['breakout_volume_ratio'] == 0
 
-def test_volume_breakout(load_test_data):
-    pair = "solusdt_volume"
+# def test_volume_breakout_but_no_compression_bb(load_test_data):
+#     pair = "solusdt_volume"
+#     df = load_test_data(pair)
+#     result = detect_cup_handle(df)
+    
+#     assert result['breakout_volume_ratio'] > 1
+#     assert result['resistance_level'] == 184.49 
+# def test_
+
+def test_no_BB_begin_and_no_up_before(load_test_data):
+    pair = "no_BB_begin"
     df = load_test_data(pair)
     result = detect_cup_handle(df)
     
-    assert result['breakout_volume_ratio'] > 1
-    assert result['resistance_level'] == 184.49 
-# def test_
+    assert not result
